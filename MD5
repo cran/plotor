@@ -1,0 +1,14 @@
+d9855cef21748b94101a29ddde8db410 *DESCRIPTION
+ce533000a33e92d58a04d90997c40166 *LICENSE
+6a89e3296f45053ff370dffc9ac7549b *NAMESPACE
+d3682e32f6cb83a11fd181d42c73ef78 *NEWS.md
+3fc004d5b4e0d1262de819c801bb10d1 *R/plot_or.R
+c5de3dd5df6504a12dd95ebccee177f1 *README.md
+9c310fc32b3e840ef182a0771dce53f1 *build/vignette.rds
+05154f5221ac24ad8efc093cae33ef86 *inst/doc/using_plotor.R
+41724d0805aa60a9ee021b44266a9272 *inst/doc/using_plotor.Rmd
+2ae7acbf3f5cffb7b559de32f42f50bc *inst/doc/using_plotor.html
+8d5ccdf48d0458edb2018010ed1728a1 *man/figures/README-unnamed-chunk-4-1.svg
+67731812df9eff059c6dce33617bc8d6 *man/figures/logo.png
+de3ac726ec02967dca1217cfd039f0b5 *man/plot_or.Rd
+41724d0805aa60a9ee021b44266a9272 *vignettes/using_plotor.Rmd
