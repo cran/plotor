@@ -10,7 +10,7 @@ utils::globalVariables(
     'comparator', 'estimate',
 
     # use_var_labels
-    'label'
+    'label', 'terms'
   )
 )
 
@@ -75,6 +75,7 @@ plot_or <- function(glm_model_results) {
 
   # use labels where provided
   df <- use_var_labels(df = df, lr = glm_model_results)
+
 
   # plot the results
   p <- plot_odds_ratio(df = df, model = glm_model_results)
@@ -215,8 +216,7 @@ plot_odds_ratio <- function(df, model) {
 
   # plot the OR plot using ggplot2
   df |>
-    dplyr::arrange(dplyr::desc(estimate)) |>
-    dplyr::group_by(group) |>
+    #dplyr::group_by(group) |>
     ggplot2::ggplot(ggplot2::aes(y = label_or, x = estimate, colour = significance)) +
     ggplot2::facet_grid(
       rows = dplyr::vars(group, level),
@@ -275,8 +275,8 @@ plot_odds_ratio <- function(df, model) {
 #' @noRd
 label_groups <- function(group, level) {
   dplyr::case_when(
-    dplyr::row_number(group) == 1 ~ group,
-    !group == dplyr::lag(group) ~ group,
+    is.na(dplyr::lag(group)) ~ group,
+    group != dplyr::lag(group) ~ group,
     .default = ''
   )
 }
@@ -304,6 +304,11 @@ use_var_labels <- function(df, lr) {
     label = vars_labels |> base::as.character()
   ) |>
     dplyr::mutate(label = label |> dplyr::na_if(y = 'NULL'))
+
+  # convert the group as a factor - levels defined per model argument order
+  df <- df |>
+    dplyr::mutate(group = group |> forcats::fct(levels = labels(terms(lr)))) |>
+    dplyr::arrange(group, level, dplyr::desc(estimate))
 
   # left join the labels to the df, change group to match the label (where available)
   df <- df |>
