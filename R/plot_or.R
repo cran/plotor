@@ -1,24 +1,9 @@
-# Set global variables ----
-# set variables to avoid issue with dplyr and 'no visible global function definition for ...'
-utils::globalVariables(
-  base::c(
-    # count_rows_by_variable
-    'group', 'level', 'rows', 'term',
-
-    # plot_odds_ratio
-    'label_or', 'significance', 'rows_scale', 'conf.high', 'conf.low',
-    'comparator', 'estimate',
-
-    # use_var_labels
-    'label', 'terms'
-  )
-)
-
 #' Plot OR
 #'
 #' Produces an Odds Ratio plot to visualise the results of a logistic regression analysis.
 #'
 #' @param glm_model_results Results from a binomial Generalised Linear Model (GLM), as produced by [stats::glm()].
+#' @param conf_level Numeric between 0.001 and 0.999 (default = 0.95). The confidence level to use when setting the confidence interval, most commonly will be 0.95 or 0.99 but can be set otherwise.
 #'
 #' @return `plotor` returns an object of class `gg` and `ggplot`
 #' @seealso
@@ -54,21 +39,34 @@ utils::globalVariables(
 #'
 #' # produce the Odds Ratio plot
 #' plot_or(lr)
-plot_or <- function(glm_model_results) {
+plot_or <- function(glm_model_results, conf_level = 0.95) {
 
+  # data and input checks ----
+  # check the model is logistic regression
+  if (!validate_glm_model(glm_model_results)) {
+    glm_family <- glm_model_results$family$family
+    cli::cli_abort(
+      message = c(
+        "{.arg glm_model_results} must be a {.pkg glm} object of 'binomial' family.",
+        "You've supplied a '{glm_family}' model."
+      )
+    )
+  }
+
+  # limit conf_level to between 0.001 and 0.999
+  conf_level <- validate_conf_level_input(conf_level)
+
+  # main ----
   # get the data from the model object
   df <- summarise_rows_per_variable_in_model(model_results = glm_model_results)
 
   # get odds ratio and confidence intervals
   model_or <- glm_model_results |>
-    broom::tidy(exponentiate = T, conf.int = T)
+    broom::tidy(exponentiate = T, conf.int = T, conf.level = conf_level)
 
   # add the odds ratio and CIs to the summary dataframe
   df <- df |>
-    dplyr::left_join(
-      y = model_or,
-      by = base::c('term')
-    )
+    dplyr::left_join(y = model_or, by = base::c('term'))
 
   # prepare the data for plotting
   df <- prepare_df_for_plotting(df = df)
@@ -76,9 +74,8 @@ plot_or <- function(glm_model_results) {
   # use labels where provided
   df <- use_var_labels(df = df, lr = glm_model_results)
 
-
   # plot the results
-  p <- plot_odds_ratio(df = df, model = glm_model_results)
+  p <- plot_odds_ratio(df = df, model = glm_model_results, conf_level = conf_level)
 
   return(p)
 }
@@ -100,7 +97,6 @@ plot_or <- function(glm_model_results) {
 #'
 #' @noRd
 count_rows_by_variable <- function(df, var_name) {
-
   # prep
   var = base::as.symbol(var_name)
 
@@ -109,18 +105,21 @@ count_rows_by_variable <- function(df, var_name) {
     dplyr::pull()
 
   # calculate rows - split if categorical
-  if(is.numeric(var_temp)) {
+  if (is.numeric(var_temp)) {
     df |>
       dplyr::filter(!is.na(var_name)) |>
       dplyr::summarise(rows = dplyr::n()) |>
-      dplyr::mutate(group = var_name, level = var_name, term = var_name) |>
-      dplyr::select(term, group, level, rows)
+      dplyr::mutate(group = var_name,
+                    level = var_name,
+                    term = var_name) |>
+      dplyr::select(.data$term, .data$group, .data$level, .data$rows)
   } else {
     df |>
       dplyr::summarise(rows = dplyr::n(), .by = var) |>
       dplyr::rename(level = var) |>
-      dplyr::mutate(group = var_name, term = base::paste0(group, level)) |>
-      dplyr::select(term, group, level, rows)
+      dplyr::mutate(group = var_name,
+                    term = base::paste0(.data$group, .data$level)) |>
+      dplyr::select(.data$term, .data$group, .data$level, .data$rows)
   }
 }
 
@@ -133,7 +132,6 @@ count_rows_by_variable <- function(df, var_name) {
 #' @return Tibble summary of rows per variable used in the model
 #' @noRd
 summarise_rows_per_variable_in_model <- function(model_results) {
-
   # get the data from the model object
   model_data <- model_results$model |> dplyr::as_tibble()
 
@@ -146,7 +144,7 @@ summarise_rows_per_variable_in_model <- function(model_results) {
   df <- model_vars |>
     purrr::map_dfr(\(.x) count_rows_by_variable(df = model_data, var_name = .x)) |>
     # rescale rows (will be used to set the size of the dot in the plot)
-    dplyr::mutate(rows_scale = rows |> scales::rescale(to = c(1, 5)))
+    dplyr::mutate(rows_scale = .data$rows |> scales::rescale(to = c(1, 5)))
 
   # return the table summary
   return(df)
@@ -159,10 +157,8 @@ summarise_rows_per_variable_in_model <- function(model_results) {
 #' @return Tibble of data expanded with variables to aid plotting
 #' @noRd
 prepare_df_for_plotting <- function(df) {
-
   df <- df |>
     dplyr::mutate(
-
       # flag records which do not cross the line of no effect
       significance = dplyr::case_when(
         base::is.na(estimate) ~ 'Comparator',
@@ -172,9 +168,7 @@ prepare_df_for_plotting <- function(df) {
       ),
 
       # set all comparator groups at one as a baseline
-      comparator = dplyr::case_when(
-        base::is.na(estimate) ~ 1
-      ),
+      comparator = dplyr::case_when(base::is.na(estimate) ~ 1),
 
       # probability label - helper for the below 'label_or' step
       p_label = dplyr::case_when(
@@ -187,9 +181,12 @@ prepare_df_for_plotting <- function(df) {
       label_or = dplyr::case_when(
         base::is.na(estimate) ~ glue::glue('{group} (comparator)'),
         .default = glue::glue(
-          '{round(estimate, digits = 2)} ', # OR estimate
-          '({round(conf.low, digits = 2)}-', # lower CI
-          '{round(conf.high, digits = 2)}, ', # upper CI
+          '{round(estimate, digits = 2)} ',
+          # OR estimate
+          '({round(conf.low, digits = 2)}-',
+          # lower CI
+          '{round(conf.high, digits = 2)}, ',
+          # upper CI
           '{p_label})' # probability
         )
       )
@@ -204,35 +201,57 @@ prepare_df_for_plotting <- function(df) {
 #'
 #' @param df Tibble of data containing a pre-prepared OR object
 #' @param model Results from a Generalised Linear Model (GLM) binomial model, as produced by [stats::glm()].
+#' @param conf_level Numeric value below 1 indicating the confidence level used when producing the Confidence Interval
 #'
 #' @return ggplot2 plot
 #' @noRd
-plot_odds_ratio <- function(df, model) {
-
+plot_odds_ratio <- function(df, model, conf_level) {
   # get the name of the outcome variable - will be used in the plot title
-  model_outcome_var = model$formula[[2]] |> base::as.character()
-  model_outcome_label = base::sapply(model$data[model_outcome_var], function(x){base::attr(x,"label")})[[1]]
-  model_outcome = dplyr::coalesce(model_outcome_label, model_outcome_var |> base::as.character())
+  model_outcome_var <-
+    model$formula[[2]] |>
+    base::as.character()
+  model_outcome_label <-
+    base::sapply(model$data[model_outcome_var], function(x) {
+      base::attr(x, "label")
+    })[[1]]
+  model_outcome <-
+    dplyr::coalesce(model_outcome_label,
+                    model_outcome_var |> base::as.character())
+
+  # get the confidence level as string
+  str_conf_level <- glue::glue('{conf_level * 100}%')
 
   # plot the OR plot using ggplot2
   df |>
-    #dplyr::group_by(group) |>
-    ggplot2::ggplot(ggplot2::aes(y = label_or, x = estimate, colour = significance)) +
+    ggplot2::ggplot(ggplot2::aes(
+      y = .data$label_or,
+      x = .data$estimate,
+      colour = .data$significance
+    )) +
     ggplot2::facet_grid(
-      rows = dplyr::vars(group, level),
+      rows = dplyr::vars(.data$label, .data$level),
       scales = 'free_y',
       space = 'free_y',
       switch = 'y',
-      labeller = ggplot2::labeller(group = label_groups)
+      labeller = ggplot2::labeller(label = label_groups, .multi_line = TRUE)
     ) +
     ggplot2::geom_vline(xintercept = 1, linetype = 'dotted') +
     # plot the OR with 95% CI
-    ggplot2::geom_point(ggplot2::aes(size = rows_scale), shape = 15) +
-    ggplot2::geom_errorbarh(ggplot2::aes(xmax = conf.high, xmin = conf.low), height = 1/5) +
-    # plot the comparator levels
     ggplot2::geom_point(
-      ggplot2::aes(y = label_or, x = comparator, colour = significance, size = rows_scale),
+      # replace any NA `estimate` and `rows_scale` with nominal to avoid warnings about missing values
+      data = df |>
+        dplyr::mutate(
+          estimate = dplyr::coalesce(.data$estimate, 1),
+          rows_scale = dplyr::coalesce(.data$rows_scale, 0)
+        ),
+      ggplot2::aes(size = .data$rows_scale),
       shape = 15
+    ) +
+    ggplot2::geom_errorbarh(
+      # remove any confidence estimates with NA values
+      data = df |> dplyr::filter(!is.na(.data$conf.high), !is.na(.data$conf.low)),
+      ggplot2::aes(xmax = .data$conf.high, xmin = .data$conf.low),
+      height = 1 / 5
     ) +
     ggplot2::scale_x_log10(n.breaks = 10) +
     ggplot2::theme_minimal() +
@@ -248,17 +267,23 @@ plot_odds_ratio <- function(df, model) {
       # handle groups
       panel.spacing = ggplot2::unit(0, 'lines'),
       strip.placement = 'outside',
-      strip.text.y.left = ggplot2::element_text(angle = 0, hjust = 1, vjust = 0.5)
+      strip.text.y.left = ggplot2::element_text(
+        angle = 0,
+        hjust = 1,
+        vjust = 0.5
+      )
     ) +
     ggplot2::labs(
       title = glue::glue('{model_outcome}'),
-      subtitle = 'Odds Ratio (OR) plot with 95% Confidence Interval (CI)',
-      x = 'Odds ratio (95% CI, log scale)'
+      subtitle = glue::glue('Odds Ratio (OR) plot with {str_conf_level} Confidence Interval (CI)'),
+      x = glue::glue('Odds ratio ({str_conf_level} CI, log scale)')
     ) +
-    ggplot2::scale_colour_manual(values = c(
-      'Significant' = '#192a56',
-      'Comparator' = '#718093',
-      'Not significant' = '#487eb0')
+    ggplot2::scale_colour_manual(
+      values = c(
+        'Significant' = '#192a56',
+        'Comparator' = '#718093',
+        'Not significant' = '#487eb0'
+      )
     )
 }
 
@@ -274,11 +299,9 @@ plot_odds_ratio <- function(df, model) {
 #' @return Character vectors of labels for both group and level
 #' @noRd
 label_groups <- function(group, level) {
-  dplyr::case_when(
-    is.na(dplyr::lag(group)) ~ group,
-    group != dplyr::lag(group) ~ group,
-    .default = ''
-  )
+  dplyr::case_when(is.na(dplyr::lag(group)) ~ group,
+                   group != dplyr::lag(group) ~ group,
+                   .default = '')
 }
 
 #' Use Variable Labels
@@ -291,34 +314,97 @@ label_groups <- function(group, level) {
 #' @return Tibble of data with group labels used where available
 #' @noRd
 use_var_labels <- function(df, lr) {
-
   # get the data from lr
   df_model <- lr$data
 
   # get the variable labels as a list
-  vars_labels = base::sapply(df_model, function(x){base::attr(x,"label")})
+  vars_labels = base::sapply(df_model, function(x) {
+    base::attr(x, "label")
+  })
 
-  # convert to a tibble and handle any missing labels
-  vars_labels = dplyr::tibble(
-    group = base::names(vars_labels),
-    label = vars_labels |> base::as.character()
-  ) |>
-    dplyr::mutate(label = label |> dplyr::na_if(y = 'NULL'))
+  # create a tibble of correctly ordered group variable and labels
+  df_vars_labels <-
+    dplyr::tibble(
+      # define group based on the variable labels
+      group = base::names(vars_labels) |> # set 'group' to be the names of the variable
+        factor(levels = labels(terms(lr))),
+      # set levels to suit glm's model terms
+      # capture the descriptive labels
+      label = vars_labels |>
+        base::as.character() |> # need character for next step
+        dplyr::na_if(y = 'NULL') |> # if there are no labels then set as NA
+        dplyr::coalesce(.data$group) |> # replace NA with group name
+        stringr::str_wrap(width = 15) |> # wrap longer length labels
+        forcats::fct() |> # convert all to a factor
+        forcats::fct_reorder(as.numeric(.data$group), .na_rm = TRUE) # order to suit the group
+    )
 
-  # convert the group as a factor - levels defined per model argument order
-  df <- df |>
-    dplyr::mutate(group = group |> forcats::fct(levels = labels(terms(lr)))) |>
-    dplyr::arrange(group, level, dplyr::desc(estimate))
-
-  # left join the labels to the df, change group to match the label (where available)
-  df <- df |>
-    dplyr::left_join(
-      y = vars_labels,
-      by = 'group'
+  # right join the df to df_vars_labels to integrate the new factors in the df
+  # NB, right join to exclude labels for the outcome variable
+  df_return <-
+    df_vars_labels |>
+    dplyr::right_join(
+      y = df |>
+        dplyr::rename(group_old = .data$group),
+      by = dplyr::join_by('group' == 'group_old')
     ) |>
-    dplyr::mutate(group = dplyr::coalesce(label, group)) |>
-    dplyr::select(-label)
+    dplyr::arrange(.data$label, .data$level)
 
-  return(df)
+  return(df_return)
 
 }
+
+#' Validate confidence level input
+#'
+#' Checks the parameter for the confidence level is within accepted limits.
+#' For example a value of 1 (to be 100% confident) is not possible to calculate,
+#' so this function checks the input against upper and lower limits and adjusts
+#' the value to sit within accepted limits.
+#'
+#' @param conf_level Numeric input from the user
+#'
+#' @returns Numeric value between upper and lower limits
+#' @noRd
+validate_conf_level_input <- function(conf_level) {
+  # set limits
+  ci_min <- 0.001
+  ci_max <- 0.999
+
+  # set a message if the input breaches our limits
+  ci_message <-
+    dplyr::case_when(
+      conf_level <= ci_min ~ glue::glue(
+        "`conf_level = {conf_level}` is below the minimum accepted value, setting to {ci_min} instead"
+      ),
+      conf_level >= ci_max ~ glue::glue(
+        "`conf_level = {conf_level}` is above the maximum accepted value, setting to {ci_max} instead"
+      )
+    )
+
+  # if message is not NA then display it
+  if (!is.na(ci_message)) {
+    cli::cli_alert_info(ci_message)
+  }
+
+  # re-set the conf_level to an accepted value
+  conf_level_new <- min(ci_max, max(ci_min, conf_level))
+
+  return(conf_level_new)
+}
+
+#' Validate the `{glm}` model
+#'
+#' Check whether the glm model object is the product of logistic regression.
+#'
+#' @param glm_model Results from a binomial Generalised Linear Model (GLM), as produced by [stats::glm()]
+#'
+#' @returns boolean (TRUE = logistic regression, FALSE = other model)
+validate_glm_model <- function(glm_model) {
+  response <- (
+    class(glm_model)[1] == 'glm' & # must be a glm class object
+      glm_model$family$family == 'binomial' & # must be a binomial model
+      glm_model$family$link == 'logit' # must use logit link
+  )
+  return(response)
+}
+
