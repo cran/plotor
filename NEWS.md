@@ -1,3 +1,5 @@
+# plotor 0.6.0
+
 # plotor 0.5.2
 
 * `plot_or()` now respects the order of covariates in the formula when plotting 

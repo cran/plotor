@@ -1,7 +1,7 @@
 Package: plotor
 Type: Package
 Title: Produces an Odds Ratio Plot from a Logistic Regression Model
-Version: 0.5.2
+Version: 0.6.0
 Authors@R: 
   person(
     'Craig', 'Parylo', 
@@ -17,11 +17,12 @@ Description: Produces an Odds Ratio (OR) Plot to visualise the result of a
     plot the results using 'ggplot2'.
 License: MIT + file LICENSE
 Encoding: UTF-8
-Imports: broom, cli, dplyr, forcats, ggplot2, glue, purrr, rlang,
-        scales, stats, stringr, tidyselect
+Imports: broom, car, cli, detectseparation, dplyr, forcats, ggplot2,
+        glue, gt, gtExtras, janitor, purrr, rlang, scales, stats,
+        stringr, tibble, tidyselect
 RoxygenNote: 7.3.2
-Suggests: datasets, knitr, labelled, rmarkdown, testthat (>= 3.0.0),
-        tidyr
+Suggests: datasets, knitr, labelled, rmarkdown, svglite, testthat (>=
+        3.0.0), tidyr, vdiffr
 VignetteBuilder: knitr
 URL: https://github.com/craig-parylo/plotor,
         https://craig-parylo.github.io/plotor/
@@ -29,7 +30,8 @@ BugReports: https://github.com/craig-parylo/plotor/issues
 Config/testthat/edition: 3
 Depends: R (>= 4.1.0)
 NeedsCompilation: no
-Packaged: 2025-02-09 11:36:06 UTC; craigparylo
-Author: Craig Parylo [aut, cre, cph] (<https://orcid.org/0000-0003-4297-7808>)
+Packaged: 2025-05-28 11:26:31 UTC; Craig.Parylo
+Author: Craig Parylo [aut, cre, cph] (ORCID:
+    <https://orcid.org/0000-0003-4297-7808>)
 Repository: CRAN
-Date/Publication: 2025-02-09 11:50:02 UTC
+Date/Publication: 2025-05-28 11:50:02 UTC

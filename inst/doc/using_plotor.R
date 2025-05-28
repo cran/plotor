@@ -50,19 +50,22 @@ lr |>
   tidy() |> 
   glimpse()
 
-## ----warning=FALSE, fig.width=9, fig.height=4, fig.format='png', fig.retina=TRUE----
+## ----warning=FALSE, fig.width=9, fig.height=4, fig.format='png', fig.retina=2----
 # using plot_or
 plot_or(glm_model_results = lr)
 
-## ----warning=FALSE, fig.width=9, fig.height=6, fig.format='png', fig.retina=TRUE----
+## ----warning=FALSE, fig.width=9, fig.height=6, fig.format='png', fig.retina=2----
 plot_or(glm_model_results = lr) + 
   theme(text = element_text(size = 16))
 
-## ----warning=FALSE, message=FALSE, fig.width=9, fig.height=4, fig.format='png', fig.retina=TRUE----
+## ----warning=FALSE, message=FALSE, fig.width=9, fig.height=4, fig.format='png', fig.retina=2----
 plot_or(glm_model_results = lr) + 
   scale_x_log10(breaks = c(0.1, 0.5, 1, 5, 10))
 
-## ----warning=FALSE, message=FALSE, fig.width=9, fig.height=4, fig.format='png', fig.retina=TRUE----
+## ----warning=FALSE, message=FALSE, fig.width=9, fig.height=4, fig.format='png', fig.retina=2----
+plot_or(glm_model_results = lr, conf_level = 0.99)
+
+## ----warning=FALSE, message=FALSE, fig.width=9, fig.height=4, fig.format='png', fig.retina=2----
 plot_or(glm_model_results = lr) +
   scale_colour_manual(values = c(
     'Significant' = '#44bd32',
@@ -70,7 +73,7 @@ plot_or(glm_model_results = lr) +
     'Not significant' = '#e84118')
   )
 
-## ----warning=FALSE, message=FALSE, fig.width=9, fig.height=4, fig.format='png', fig.retina=TRUE----
+## ----warning=FALSE, message=FALSE, fig.width=9, fig.height=4, fig.format='png', fig.retina=2----
 plot_or(glm_model_results = lr) +
   labs(
     title = 'Passenger survival from the Titanic disaster',
@@ -103,7 +106,7 @@ df <- datasets::esoph |>
 # preview the data
 df |> glimpse()
 
-## ----warning=FALSE, message=FALSE, fig.width=9, fig.height=5, fig.format='png', fig.retina=TRUE----
+## ----warning=FALSE, message=FALSE, fig.width=9, fig.height=5, fig.format='png', fig.retina=2----
 # conduct the logistic regression
 lr <- glm(
   data = df,
@@ -133,7 +136,7 @@ labelled::var_label(df) <- var_labels
 # preview the data with labels appplied 
 labelled::look_for(df)
 
-## ----warning=FALSE, message=FALSE, fig.width=9, fig.height=5, fig.format='png', fig.retina=TRUE----
+## ----warning=FALSE, message=FALSE, fig.width=9, fig.height=5, fig.format='png', fig.retina=2----
 # conduct the logistic regression
 lr <- glm(
   data = df,
@@ -143,4 +146,22 @@ lr <- glm(
 
 # plot the odds ratio plot using variable labels
 plot_or(lr)
+
+## ----warning=FALSE, message=FALSE, fig.width=9, fig.height=5, fig.format='png', fig.retina=2----
+# conduct the logistic regression with tobacco listed first in the 'formula'
+lr <- glm(
+  data = df,
+  family = 'binomial',
+  formula = Group ~ tobgp + alcgp + agegp
+)
+
+# plot the odds ratio plot using variable labels
+plot_or(lr)
+
+## -----------------------------------------------------------------------------
+table_or(lr, output = 'tibble')
+
+## -----------------------------------------------------------------------------
+table_or(lr, output = 'gt') |> 
+  gt::tab_options(container.width = 1100)
 
