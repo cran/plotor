@@ -758,25 +758,27 @@ rate from the base population to those with the outcome of interest.</p>
 tables using the new function <code>table_or()</code> as either a
 <code>tibble</code> or a publication-ready <code>{gt}</code> table.</p>
 <div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="fu">table_or</span>(lr, <span class="at">output =</span> <span class="st">&#39;tibble&#39;</span>)</span>
-<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a><span class="co">#&gt; # A tibble: 14 × 14</span></span>
-<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a><span class="co">#&gt;    label     level  rows outcome outcome_rate class estimate std.error statistic</span></span>
-<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a><span class="co">#&gt;    &lt;fct&gt;     &lt;fct&gt; &lt;int&gt;   &lt;int&gt;        &lt;dbl&gt; &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;</span></span>
-<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a><span class="co">#&gt;  1 &quot;Age gro… 25-34   116       1      0.00862 fact…    NA       NA         NA   </span></span>
-<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a><span class="co">#&gt;  2 &quot;Age gro… 35-44   199       9      0.0452  fact…     7.25     1.10       1.79</span></span>
-<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a><span class="co">#&gt;  3 &quot;Age gro… 45-54   213      46      0.216   fact…    43.7      1.07       3.54</span></span>
-<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a><span class="co">#&gt;  4 &quot;Age gro… 55-64   242      76      0.314   fact…    76.3      1.06       4.07</span></span>
-<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a><span class="co">#&gt;  5 &quot;Age gro… 65-74   161      55      0.342   fact…   134.       1.08       4.55</span></span>
-<span id="cb17-10"><a href="#cb17-10" tabindex="-1"></a><span class="co">#&gt;  6 &quot;Age gro… 75+      44      13      0.295   fact…   125.       1.12       4.30</span></span>
-<span id="cb17-11"><a href="#cb17-11" tabindex="-1"></a><span class="co">#&gt;  7 &quot;Alcohol… 0-39…   415      29      0.0699  fact…    NA       NA         NA   </span></span>
-<span id="cb17-12"><a href="#cb17-12" tabindex="-1"></a><span class="co">#&gt;  8 &quot;Alcohol… 40-79   355      75      0.211   fact…     4.20     0.250      5.74</span></span>
-<span id="cb17-13"><a href="#cb17-13" tabindex="-1"></a><span class="co">#&gt;  9 &quot;Alcohol… 80-1…   138      51      0.370   fact…     7.25     0.285      6.96</span></span>
-<span id="cb17-14"><a href="#cb17-14" tabindex="-1"></a><span class="co">#&gt; 10 &quot;Alcohol… 120+     67      45      0.672   fact…    36.7      0.385      9.36</span></span>
-<span id="cb17-15"><a href="#cb17-15" tabindex="-1"></a><span class="co">#&gt; 11 &quot;Tobacco… 0-9g…   525      78      0.149   fact…    NA       NA         NA   </span></span>
-<span id="cb17-16"><a href="#cb17-16" tabindex="-1"></a><span class="co">#&gt; 12 &quot;Tobacco… 10-19   236      58      0.246   fact…     1.55     0.228      1.92</span></span>
-<span id="cb17-17"><a href="#cb17-17" tabindex="-1"></a><span class="co">#&gt; 13 &quot;Tobacco… 20-29   132      33      0.25    fact…     1.67     0.273      1.88</span></span>
-<span id="cb17-18"><a href="#cb17-18" tabindex="-1"></a><span class="co">#&gt; 14 &quot;Tobacco… 30+      82      31      0.378   fact…     5.16     0.344      4.77</span></span>
-<span id="cb17-19"><a href="#cb17-19" tabindex="-1"></a><span class="co">#&gt; # ℹ 5 more variables: p.value &lt;dbl&gt;, conf.low &lt;dbl&gt;, conf.high &lt;dbl&gt;,</span></span>
-<span id="cb17-20"><a href="#cb17-20" tabindex="-1"></a><span class="co">#&gt; #   significance &lt;chr&gt;, comparator &lt;dbl&gt;</span></span></code></pre></div>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a><span class="co">#&gt; Warning: Some of your categorical predictor variables have levels with too few</span></span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a><span class="co">#&gt; outcomes.</span></span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a><span class="co">#&gt; # A tibble: 14 × 14</span></span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a><span class="co">#&gt;    label     level  rows outcome outcome_rate class estimate std.error statistic</span></span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a><span class="co">#&gt;    &lt;fct&gt;     &lt;fct&gt; &lt;int&gt;   &lt;int&gt;        &lt;dbl&gt; &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;</span></span>
+<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a><span class="co">#&gt;  1 &quot;Age gro… 25-34   116       1      0.00862 fact…    NA       NA         NA   </span></span>
+<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a><span class="co">#&gt;  2 &quot;Age gro… 35-44   199       9      0.0452  fact…     7.25     1.10       1.79</span></span>
+<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a><span class="co">#&gt;  3 &quot;Age gro… 45-54   213      46      0.216   fact…    43.7      1.07       3.54</span></span>
+<span id="cb17-10"><a href="#cb17-10" tabindex="-1"></a><span class="co">#&gt;  4 &quot;Age gro… 55-64   242      76      0.314   fact…    76.3      1.06       4.07</span></span>
+<span id="cb17-11"><a href="#cb17-11" tabindex="-1"></a><span class="co">#&gt;  5 &quot;Age gro… 65-74   161      55      0.342   fact…   134.       1.08       4.55</span></span>
+<span id="cb17-12"><a href="#cb17-12" tabindex="-1"></a><span class="co">#&gt;  6 &quot;Age gro… 75+      44      13      0.295   fact…   125.       1.12       4.30</span></span>
+<span id="cb17-13"><a href="#cb17-13" tabindex="-1"></a><span class="co">#&gt;  7 &quot;Alcohol… 0-39…   415      29      0.0699  fact…    NA       NA         NA   </span></span>
+<span id="cb17-14"><a href="#cb17-14" tabindex="-1"></a><span class="co">#&gt;  8 &quot;Alcohol… 40-79   355      75      0.211   fact…     4.20     0.250      5.74</span></span>
+<span id="cb17-15"><a href="#cb17-15" tabindex="-1"></a><span class="co">#&gt;  9 &quot;Alcohol… 80-1…   138      51      0.370   fact…     7.25     0.285      6.96</span></span>
+<span id="cb17-16"><a href="#cb17-16" tabindex="-1"></a><span class="co">#&gt; 10 &quot;Alcohol… 120+     67      45      0.672   fact…    36.7      0.385      9.36</span></span>
+<span id="cb17-17"><a href="#cb17-17" tabindex="-1"></a><span class="co">#&gt; 11 &quot;Tobacco… 0-9g…   525      78      0.149   fact…    NA       NA         NA   </span></span>
+<span id="cb17-18"><a href="#cb17-18" tabindex="-1"></a><span class="co">#&gt; 12 &quot;Tobacco… 10-19   236      58      0.246   fact…     1.55     0.228      1.92</span></span>
+<span id="cb17-19"><a href="#cb17-19" tabindex="-1"></a><span class="co">#&gt; 13 &quot;Tobacco… 20-29   132      33      0.25    fact…     1.67     0.273      1.88</span></span>
+<span id="cb17-20"><a href="#cb17-20" tabindex="-1"></a><span class="co">#&gt; 14 &quot;Tobacco… 30+      82      31      0.378   fact…     5.16     0.344      4.77</span></span>
+<span id="cb17-21"><a href="#cb17-21" tabindex="-1"></a><span class="co">#&gt; # ℹ 5 more variables: p.value &lt;dbl&gt;, conf.low &lt;dbl&gt;, conf.high &lt;dbl&gt;,</span></span>
+<span id="cb17-22"><a href="#cb17-22" tabindex="-1"></a><span class="co">#&gt; #   significance &lt;chr&gt;, comparator &lt;dbl&gt;</span></span></code></pre></div>
 <p>The tibble contains details</p>
 <ul>
 <li><p><code>label</code> containing the name or label for the
@@ -807,21 +809,30 @@ tables and visualisations.</p>
 <p>Specify <code>output = &#39;gt&#39;</code> to get a publication-quality html
 table made using the <code>{gt}</code> package.</p>
 <div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a><span class="fu">table_or</span>(lr, <span class="at">output =</span> <span class="st">&#39;gt&#39;</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a>  gt<span class="sc">::</span><span class="fu">tab_options</span>(<span class="at">container.width =</span> <span class="dv">1100</span>)</span></code></pre></div>
-<div id="glzdhugrwd" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:1100px;height:auto;">
-<style>#glzdhugrwd table {
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a>  gt<span class="sc">::</span><span class="fu">tab_options</span>(<span class="at">container.width =</span> <span class="dv">1100</span>)</span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a><span class="co">#&gt; Warning: Some of your categorical predictor variables have levels with too few</span></span>
+<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a><span class="co">#&gt; outcomes.</span></span>
+<span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a><span class="co">#&gt; Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.</span></span>
+<span id="cb18-6"><a href="#cb18-6" tabindex="-1"></a><span class="co">#&gt; ℹ Please use `linewidth` instead.</span></span>
+<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a><span class="co">#&gt; ℹ The deprecated feature was likely used in the plotor package.</span></span>
+<span id="cb18-8"><a href="#cb18-8" tabindex="-1"></a><span class="co">#&gt;   Please report the issue at &lt;https://github.com/craig-parylo/plotor/issues&gt;.</span></span>
+<span id="cb18-9"><a href="#cb18-9" tabindex="-1"></a><span class="co">#&gt; This warning is displayed once every 8 hours.</span></span>
+<span id="cb18-10"><a href="#cb18-10" tabindex="-1"></a><span class="co">#&gt; Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span>
+<span id="cb18-11"><a href="#cb18-11" tabindex="-1"></a><span class="co">#&gt; generated.</span></span></code></pre></div>
+<div id="ztxgiyekva" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:1100px;height:auto;">
+<style>#ztxgiyekva table {
 font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 -webkit-font-smoothing: antialiased;
 -moz-osx-font-smoothing: grayscale;
 }
-#glzdhugrwd thead, #glzdhugrwd tbody, #glzdhugrwd tfoot, #glzdhugrwd tr, #glzdhugrwd td, #glzdhugrwd th {
+#ztxgiyekva thead, #ztxgiyekva tbody, #ztxgiyekva tfoot, #ztxgiyekva tr, #ztxgiyekva td, #ztxgiyekva th {
 border-style: none;
 }
-#glzdhugrwd p {
+#ztxgiyekva p {
 margin: 0;
 padding: 0;
 }
-#glzdhugrwd .gt_table {
+#ztxgiyekva .gt_table {
 display: table;
 border-collapse: collapse;
 line-height: normal;
@@ -846,11 +857,11 @@ border-left-style: none;
 border-left-width: 2px;
 border-left-color: #D3D3D3;
 }
-#glzdhugrwd .gt_caption {
+#ztxgiyekva .gt_caption {
 padding-top: 4px;
 padding-bottom: 4px;
 }
-#glzdhugrwd .gt_title {
+#ztxgiyekva .gt_title {
 color: #333333;
 font-size: 125%;
 font-weight: initial;
@@ -861,7 +872,7 @@ padding-right: 5px;
 border-bottom-color: #FFFFFF;
 border-bottom-width: 0;
 }
-#glzdhugrwd .gt_subtitle {
+#ztxgiyekva .gt_subtitle {
 color: #333333;
 font-size: 85%;
 font-weight: initial;
@@ -872,7 +883,7 @@ padding-right: 5px;
 border-top-color: #FFFFFF;
 border-top-width: 0;
 }
-#glzdhugrwd .gt_heading {
+#ztxgiyekva .gt_heading {
 background-color: #FFFFFF;
 text-align: center;
 border-bottom-color: #FFFFFF;
@@ -883,12 +894,12 @@ border-right-style: none;
 border-right-width: 1px;
 border-right-color: #D3D3D3;
 }
-#glzdhugrwd .gt_bottom_border {
+#ztxgiyekva .gt_bottom_border {
 border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#glzdhugrwd .gt_col_headings {
+#ztxgiyekva .gt_col_headings {
 border-top-style: solid;
 border-top-width: 2px;
 border-top-color: #D3D3D3;
@@ -902,7 +913,7 @@ border-right-style: none;
 border-right-width: 1px;
 border-right-color: #D3D3D3;
 }
-#glzdhugrwd .gt_col_heading {
+#ztxgiyekva .gt_col_heading {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -921,7 +932,7 @@ padding-left: 5px;
 padding-right: 5px;
 overflow-x: hidden;
 }
-#glzdhugrwd .gt_column_spanner_outer {
+#ztxgiyekva .gt_column_spanner_outer {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -932,13 +943,13 @@ padding-bottom: 0;
 padding-left: 4px;
 padding-right: 4px;
 }
-#glzdhugrwd .gt_column_spanner_outer:first-child {
+#ztxgiyekva .gt_column_spanner_outer:first-child {
 padding-left: 0;
 }
-#glzdhugrwd .gt_column_spanner_outer:last-child {
+#ztxgiyekva .gt_column_spanner_outer:last-child {
 padding-right: 0;
 }
-#glzdhugrwd .gt_column_spanner {
+#ztxgiyekva .gt_column_spanner {
 border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
@@ -949,10 +960,10 @@ overflow-x: hidden;
 display: inline-block;
 width: 100%;
 }
-#glzdhugrwd .gt_spanner_row {
+#ztxgiyekva .gt_spanner_row {
 border-bottom-style: hidden;
 }
-#glzdhugrwd .gt_group_heading {
+#ztxgiyekva .gt_group_heading {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -977,7 +988,7 @@ border-right-color: #D3D3D3;
 vertical-align: middle;
 text-align: left;
 }
-#glzdhugrwd .gt_empty_group_heading {
+#ztxgiyekva .gt_empty_group_heading {
 padding: 0.5px;
 color: #333333;
 background-color: #FFFFFF;
@@ -991,13 +1002,13 @@ border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 vertical-align: middle;
 }
-#glzdhugrwd .gt_from_md > :first-child {
+#ztxgiyekva .gt_from_md > :first-child {
 margin-top: 0;
 }
-#glzdhugrwd .gt_from_md > :last-child {
+#ztxgiyekva .gt_from_md > :last-child {
 margin-bottom: 0;
 }
-#glzdhugrwd .gt_row {
+#ztxgiyekva .gt_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -1015,7 +1026,7 @@ border-right-color: #D3D3D3;
 vertical-align: middle;
 overflow-x: hidden;
 }
-#glzdhugrwd .gt_stub {
+#ztxgiyekva .gt_stub {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -1027,7 +1038,7 @@ border-right-color: #D3D3D3;
 padding-left: 5px;
 padding-right: 5px;
 }
-#glzdhugrwd .gt_stub_row_group {
+#ztxgiyekva .gt_stub_row_group {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -1040,13 +1051,13 @@ padding-left: 5px;
 padding-right: 5px;
 vertical-align: top;
 }
-#glzdhugrwd .gt_row_group_first td {
+#ztxgiyekva .gt_row_group_first td {
 border-top-width: 2px;
 }
-#glzdhugrwd .gt_row_group_first th {
+#ztxgiyekva .gt_row_group_first th {
 border-top-width: 2px;
 }
-#glzdhugrwd .gt_summary_row {
+#ztxgiyekva .gt_summary_row {
 color: #333333;
 background-color: #FFFFFF;
 text-transform: inherit;
@@ -1055,14 +1066,14 @@ padding-bottom: 8px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#glzdhugrwd .gt_first_summary_row {
+#ztxgiyekva .gt_first_summary_row {
 border-top-style: solid;
 border-top-color: #D3D3D3;
 }
-#glzdhugrwd .gt_first_summary_row.thick {
+#ztxgiyekva .gt_first_summary_row.thick {
 border-top-width: 2px;
 }
-#glzdhugrwd .gt_last_summary_row {
+#ztxgiyekva .gt_last_summary_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -1071,7 +1082,7 @@ border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#glzdhugrwd .gt_grand_summary_row {
+#ztxgiyekva .gt_grand_summary_row {
 color: #333333;
 background-color: #FFFFFF;
 text-transform: inherit;
@@ -1080,7 +1091,7 @@ padding-bottom: 8px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#glzdhugrwd .gt_first_grand_summary_row {
+#ztxgiyekva .gt_first_grand_summary_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -1089,7 +1100,7 @@ border-top-style: double;
 border-top-width: 6px;
 border-top-color: #D3D3D3;
 }
-#glzdhugrwd .gt_last_grand_summary_row_top {
+#ztxgiyekva .gt_last_grand_summary_row_top {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -1098,10 +1109,10 @@ border-bottom-style: double;
 border-bottom-width: 6px;
 border-bottom-color: #D3D3D3;
 }
-#glzdhugrwd .gt_striped {
+#ztxgiyekva .gt_striped {
 background-color: rgba(128, 128, 128, 0.05);
 }
-#glzdhugrwd .gt_table_body {
+#ztxgiyekva .gt_table_body {
 border-top-style: solid;
 border-top-width: 2px;
 border-top-color: #D3D3D3;
@@ -1109,7 +1120,7 @@ border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#glzdhugrwd .gt_footnotes {
+#ztxgiyekva .gt_footnotes {
 color: #333333;
 background-color: #FFFFFF;
 border-bottom-style: none;
@@ -1122,7 +1133,7 @@ border-right-style: none;
 border-right-width: 2px;
 border-right-color: #D3D3D3;
 }
-#glzdhugrwd .gt_footnote {
+#ztxgiyekva .gt_footnote {
 margin: 0px;
 font-size: 90%;
 padding-top: 4px;
@@ -1130,7 +1141,7 @@ padding-bottom: 4px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#glzdhugrwd .gt_sourcenotes {
+#ztxgiyekva .gt_sourcenotes {
 color: #333333;
 background-color: #FFFFFF;
 border-bottom-style: none;
@@ -1143,64 +1154,64 @@ border-right-style: none;
 border-right-width: 2px;
 border-right-color: #D3D3D3;
 }
-#glzdhugrwd .gt_sourcenote {
+#ztxgiyekva .gt_sourcenote {
 font-size: 90%;
 padding-top: 4px;
 padding-bottom: 4px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#glzdhugrwd .gt_left {
+#ztxgiyekva .gt_left {
 text-align: left;
 }
-#glzdhugrwd .gt_center {
+#ztxgiyekva .gt_center {
 text-align: center;
 }
-#glzdhugrwd .gt_right {
+#ztxgiyekva .gt_right {
 text-align: right;
 font-variant-numeric: tabular-nums;
 }
-#glzdhugrwd .gt_font_normal {
+#ztxgiyekva .gt_font_normal {
 font-weight: normal;
 }
-#glzdhugrwd .gt_font_bold {
+#ztxgiyekva .gt_font_bold {
 font-weight: bold;
 }
-#glzdhugrwd .gt_font_italic {
+#ztxgiyekva .gt_font_italic {
 font-style: italic;
 }
-#glzdhugrwd .gt_super {
+#ztxgiyekva .gt_super {
 font-size: 65%;
 }
-#glzdhugrwd .gt_footnote_marks {
+#ztxgiyekva .gt_footnote_marks {
 font-size: 75%;
 vertical-align: 0.4em;
 position: initial;
 }
-#glzdhugrwd .gt_asterisk {
+#ztxgiyekva .gt_asterisk {
 font-size: 100%;
 vertical-align: 0;
 }
-#glzdhugrwd .gt_indent_1 {
+#ztxgiyekva .gt_indent_1 {
 text-indent: 5px;
 }
-#glzdhugrwd .gt_indent_2 {
+#ztxgiyekva .gt_indent_2 {
 text-indent: 10px;
 }
-#glzdhugrwd .gt_indent_3 {
+#ztxgiyekva .gt_indent_3 {
 text-indent: 15px;
 }
-#glzdhugrwd .gt_indent_4 {
+#ztxgiyekva .gt_indent_4 {
 text-indent: 20px;
 }
-#glzdhugrwd .gt_indent_5 {
+#ztxgiyekva .gt_indent_5 {
 text-indent: 25px;
 }
-#glzdhugrwd .katex-display {
+#ztxgiyekva .katex-display {
 display: inline-flex !important;
 margin-bottom: 0.75em !important;
 }
-#glzdhugrwd div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#ztxgiyekva div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
 height: 0px !important;
 }
 </style>
@@ -1264,7 +1275,7 @@ height: 0px !important;
 <td headers="Age group level_2 conf.low" class="gt_row gt_right">1.202</td>
 <td headers="Age group level_2 conf.high" class="gt_row gt_right">141.0</td>
 <td headers="Age group level_2 significance" class="gt_row gt_left">Significant</td>
-<td headers="Age group level_2 plot_or" class="gt_row gt_center"><?xml version="1.0" encoding="UTF-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="127.56pt" height="14.17pt" viewBox="0 0 127.56 14.17"><g class="svglite"><defs>  <style type="text/css"> .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle { fill: none; stroke: #000000; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 10.00; } .svglite text { white-space: pre; } .svglite g.glyphgroup path { fill: inherit; stroke: none; } </style></defs><rect width="100%" height="100%" style="stroke: none; fill: none;" /><defs>  <clipPath id="cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==">    <rect x="0.00" y="0.00" width="127.56" height="14.17" />  </clipPath></defs><g clip-path="url(#cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==)"><text x="15.82" y="11.42" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">0</text><line x1="15.82" y1="14.17" x2="15.82" y2="0.0000000000000018" style="stroke-width: 1.07; stroke-linecap: butt;"></line><line x1="18.08" y1="8.66" x2="76.60" y2="8.66" style="stroke-width: 2.13; stroke: #BEBEBE; stroke-opacity: 0.75;"></line><circle cx="40.15" cy="8.66" r="2.67" style="stroke-width: 1.06; stroke: #FFFFFF; fill: #000000;"></circle><polygon points="75.98,6.69 76.54,6.69 76.54,6.69 76.54,6.69 76.54,6.69 76.54,6.69 76.54,6.69 76.54,6.69 76.54,6.69 76.54,6.69 76.54,6.69 76.54,6.69 76.54,6.69 76.54,6.69 76.54,5.56 76.54,5.56 76.54,5.56 76.54,5.56 76.54,5.56 76.54,5.56 76.54,5.56 76.54,5.56 76.54,5.56 76.54,5.56 76.54,5.56 76.54,5.56 75.98,5.56 75.98,5.56 75.98,5.56 75.98,5.56 75.98,5.56 75.98,5.56 75.98,5.56 75.98,5.56 75.98,5.56 75.98,5.56 75.98,5.56 75.98,5.56 75.98,5.56 75.98,6.69 75.98,6.69 75.98,6.69 75.98,6.69 75.98,6.69 75.98,6.69 75.98,6.69 75.98,6.69 75.98,6.69 75.98,6.69 75.98,6.69 75.98,6.69 " style="stroke-width: 0.00;"></polygon><text x="76.54" y="6.48" text-anchor="end" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">5</text><polygon points="18.14,6.69 18.70,6.69 18.70,6.69 18.70,6.69 18.70,6.69 18.70,6.69 18.70,6.69 18.70,6.69 18.70,6.69 18.70,6.69 18.70,6.69 18.70,6.69 18.70,6.69 18.70,6.69 18.70,5.56 18.70,5.56 18.70,5.56 18.70,5.56 18.70,5.56 18.70,5.56 18.70,5.56 18.70,5.56 18.70,5.56 18.70,5.56 18.70,5.56 18.70,5.56 18.14,5.56 18.14,5.56 18.14,5.56 18.14,5.56 18.14,5.56 18.14,5.56 18.14,5.56 18.14,5.56 18.14,5.56 18.14,5.56 18.14,5.56 18.14,5.56 18.14,5.56 18.14,6.69 18.14,6.69 18.14,6.69 18.14,6.69 18.14,6.69 18.14,6.69 18.14,6.69 18.14,6.69 18.14,6.69 18.14,6.69 18.14,6.69 18.14,6.69 " style="stroke-width: 0.00;"></polygon><text x="18.14" y="6.48" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">0</text></g></g></svg></td></tr>
+<td headers="Age group level_2 plot_or" class="gt_row gt_center"><?xml version="1.0" encoding="UTF-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="127.56pt" height="14.17pt" viewBox="0 0 127.56 14.17"><g class="svglite"><defs>  <style type="text/css"> .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle { fill: none; stroke: #000000; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 10.00; } .svglite text { white-space: pre; } .svglite g.glyphgroup path { fill: inherit; stroke: none; } </style></defs><rect width="100%" height="100%" style="stroke: none; fill: none;" /><defs>  <clipPath id="cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==">    <rect x="0.00" y="0.00" width="127.56" height="14.17" />  </clipPath></defs><g clip-path="url(#cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==)"><text x="15.82" y="11.42" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">0</text><line x1="15.82" y1="14.17" x2="15.82" y2="0.0000000000000018" style="stroke-width: 1.07; stroke-linecap: butt;"></line><line x1="18.08" y1="8.66" x2="76.60" y2="8.66" style="stroke-width: 2.13; stroke: #BEBEBE; stroke-opacity: 0.75;"></line><circle cx="40.15" cy="8.66" r="2.67" style="stroke-width: 1.06; stroke: #FFFFFF; fill: #000000;"></circle></g></g></svg></td></tr>
     <tr><td headers="Age group level_3 level" class="gt_row gt_center">45-54</td>
 <td headers="Age group level_3 rows" class="gt_row gt_right">213</td>
 <td headers="Age group level_3 outcome" class="gt_row gt_right">46</td>
@@ -1276,7 +1287,7 @@ height: 0px !important;
 <td headers="Age group level_3 conf.low" class="gt_row gt_right">8.204</td>
 <td headers="Age group level_3 conf.high" class="gt_row gt_right">820.4</td>
 <td headers="Age group level_3 significance" class="gt_row gt_left">Significant</td>
-<td headers="Age group level_3 plot_or" class="gt_row gt_center"><?xml version="1.0" encoding="UTF-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="127.56pt" height="14.17pt" viewBox="0 0 127.56 14.17"><g class="svglite"><defs>  <style type="text/css"> .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle { fill: none; stroke: #000000; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 10.00; } .svglite text { white-space: pre; } .svglite g.glyphgroup path { fill: inherit; stroke: none; } </style></defs><rect width="100%" height="100%" style="stroke: none; fill: none;" /><defs>  <clipPath id="cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==">    <rect x="0.00" y="0.00" width="127.56" height="14.17" />  </clipPath></defs><g clip-path="url(#cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==)"><text x="15.82" y="11.42" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">0</text><line x1="15.82" y1="14.17" x2="15.82" y2="0.0000000000000018" style="stroke-width: 1.07; stroke-linecap: butt;"></line><line x1="41.67" y1="8.66" x2="98.23" y2="8.66" style="stroke-width: 2.13; stroke: #BEBEBE; stroke-opacity: 0.75;"></line><circle cx="62.20" cy="8.66" r="2.67" style="stroke-width: 1.06; stroke: #FFFFFF; fill: #000000;"></circle><polygon points="97.61,6.69 98.17,6.69 98.17,6.69 98.17,6.69 98.17,6.69 98.17,6.69 98.17,6.69 98.17,6.69 98.17,6.69 98.17,6.69 98.17,6.69 98.17,6.69 98.17,6.69 98.17,6.69 98.17,5.56 98.17,5.56 98.17,5.56 98.17,5.56 98.17,5.56 98.17,5.56 98.17,5.56 98.17,5.56 98.17,5.56 98.17,5.56 98.17,5.56 98.17,5.56 97.61,5.56 97.61,5.56 97.61,5.56 97.61,5.56 97.61,5.56 97.61,5.56 97.61,5.56 97.61,5.56 97.61,5.56 97.61,5.56 97.61,5.56 97.61,5.56 97.61,5.56 97.61,6.69 97.61,6.69 97.61,6.69 97.61,6.69 97.61,6.69 97.61,6.69 97.61,6.69 97.61,6.69 97.61,6.69 97.61,6.69 97.61,6.69 97.61,6.69 " style="stroke-width: 0.00;"></polygon><text x="98.17" y="6.48" text-anchor="end" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">7</text><polygon points="41.72,6.69 42.29,6.69 42.29,6.69 42.29,6.69 42.29,6.69 42.29,6.69 42.29,6.69 42.29,6.69 42.29,6.69 42.29,6.69 42.29,6.69 42.29,6.69 42.29,6.69 42.29,6.69 42.29,5.56 42.29,5.56 42.29,5.56 42.29,5.56 42.29,5.56 42.29,5.56 42.29,5.56 42.29,5.56 42.29,5.56 42.29,5.56 42.29,5.56 42.29,5.56 41.72,5.56 41.72,5.56 41.72,5.56 41.72,5.56 41.72,5.56 41.72,5.56 41.72,5.56 41.72,5.56 41.72,5.56 41.72,5.56 41.72,5.56 41.72,5.56 41.72,5.56 41.72,6.69 41.72,6.69 41.72,6.69 41.72,6.69 41.72,6.69 41.72,6.69 41.72,6.69 41.72,6.69 41.72,6.69 41.72,6.69 41.72,6.69 41.72,6.69 " style="stroke-width: 0.00;"></polygon><text x="41.72" y="6.48" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">2</text></g></g></svg></td></tr>
+<td headers="Age group level_3 plot_or" class="gt_row gt_center"><?xml version="1.0" encoding="UTF-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="127.56pt" height="14.17pt" viewBox="0 0 127.56 14.17"><g class="svglite"><defs>  <style type="text/css"> .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle { fill: none; stroke: #000000; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 10.00; } .svglite text { white-space: pre; } .svglite g.glyphgroup path { fill: inherit; stroke: none; } </style></defs><rect width="100%" height="100%" style="stroke: none; fill: none;" /><defs>  <clipPath id="cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==">    <rect x="0.00" y="0.00" width="127.56" height="14.17" />  </clipPath></defs><g clip-path="url(#cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==)"><text x="15.82" y="11.42" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">0</text><line x1="15.82" y1="14.17" x2="15.82" y2="0.0000000000000018" style="stroke-width: 1.07; stroke-linecap: butt;"></line><line x1="41.67" y1="8.66" x2="98.23" y2="8.66" style="stroke-width: 2.13; stroke: #BEBEBE; stroke-opacity: 0.75;"></line><circle cx="62.20" cy="8.66" r="2.67" style="stroke-width: 1.06; stroke: #FFFFFF; fill: #000000;"></circle></g></g></svg></td></tr>
     <tr><td headers="Age group level_4 level" class="gt_row gt_center">55-64</td>
 <td headers="Age group level_4 rows" class="gt_row gt_right">242</td>
 <td headers="Age group level_4 outcome" class="gt_row gt_right">76</td>
@@ -1288,7 +1299,7 @@ height: 0px !important;
 <td headers="Age group level_4 conf.low" class="gt_row gt_right">14.50</td>
 <td headers="Age group level_4 conf.high" class="gt_row gt_right">1,431</td>
 <td headers="Age group level_4 significance" class="gt_row gt_left">Significant</td>
-<td headers="Age group level_4 plot_or" class="gt_row gt_center"><?xml version="1.0" encoding="UTF-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="127.56pt" height="14.17pt" viewBox="0 0 127.56 14.17"><g class="svglite"><defs>  <style type="text/css"> .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle { fill: none; stroke: #000000; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 10.00; } .svglite text { white-space: pre; } .svglite g.glyphgroup path { fill: inherit; stroke: none; } </style></defs><rect width="100%" height="100%" style="stroke: none; fill: none;" /><defs>  <clipPath id="cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==">    <rect x="0.00" y="0.00" width="127.56" height="14.17" />  </clipPath></defs><g clip-path="url(#cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==)"><text x="15.82" y="11.42" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">0</text><line x1="15.82" y1="14.17" x2="15.82" y2="0.0000000000000018" style="stroke-width: 1.07; stroke-linecap: butt;"></line><line x1="48.66" y1="8.66" x2="105.06" y2="8.66" style="stroke-width: 2.13; stroke: #BEBEBE; stroke-opacity: 0.75;"></line><circle cx="69.06" cy="8.66" r="2.67" style="stroke-width: 1.06; stroke: #FFFFFF; fill: #000000;"></circle><polygon points="104.44,6.69 105.00,6.69 105.00,6.69 105.00,6.69 105.00,6.69 105.00,6.69 105.00,6.69 105.00,6.69 105.00,6.69 105.00,6.69 105.00,6.69 105.00,6.69 105.00,6.69 105.00,6.69 105.00,5.56 105.00,5.56 105.00,5.56 105.00,5.56 105.00,5.56 105.00,5.56 105.00,5.56 105.00,5.56 105.00,5.56 105.00,5.56 105.00,5.56 105.00,5.56 104.44,5.56 104.44,5.56 104.44,5.56 104.44,5.56 104.44,5.56 104.44,5.56 104.44,5.56 104.44,5.56 104.44,5.56 104.44,5.56 104.44,5.56 104.44,5.56 104.44,5.56 104.44,6.69 104.44,6.69 104.44,6.69 104.44,6.69 104.44,6.69 104.44,6.69 104.44,6.69 104.44,6.69 104.44,6.69 104.44,6.69 104.44,6.69 104.44,6.69 " style="stroke-width: 0.00;"></polygon><text x="105.00" y="6.48" text-anchor="end" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">7</text><polygon points="48.72,6.69 49.28,6.69 49.28,6.69 49.28,6.69 49.28,6.69 49.28,6.69 49.28,6.69 49.28,6.69 49.28,6.69 49.28,6.69 49.28,6.69 49.28,6.69 49.28,6.69 49.28,6.69 49.28,5.56 49.28,5.56 49.28,5.56 49.28,5.56 49.28,5.56 49.28,5.56 49.28,5.56 49.28,5.56 49.28,5.56 49.28,5.56 49.28,5.56 49.28,5.56 48.72,5.56 48.72,5.56 48.72,5.56 48.72,5.56 48.72,5.56 48.72,5.56 48.72,5.56 48.72,5.56 48.72,5.56 48.72,5.56 48.72,5.56 48.72,5.56 48.72,5.56 48.72,6.69 48.72,6.69 48.72,6.69 48.72,6.69 48.72,6.69 48.72,6.69 48.72,6.69 48.72,6.69 48.72,6.69 48.72,6.69 48.72,6.69 48.72,6.69 " style="stroke-width: 0.00;"></polygon><text x="48.72" y="6.48" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">3</text></g></g></svg></td></tr>
+<td headers="Age group level_4 plot_or" class="gt_row gt_center"><?xml version="1.0" encoding="UTF-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="127.56pt" height="14.17pt" viewBox="0 0 127.56 14.17"><g class="svglite"><defs>  <style type="text/css"> .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle { fill: none; stroke: #000000; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 10.00; } .svglite text { white-space: pre; } .svglite g.glyphgroup path { fill: inherit; stroke: none; } </style></defs><rect width="100%" height="100%" style="stroke: none; fill: none;" /><defs>  <clipPath id="cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==">    <rect x="0.00" y="0.00" width="127.56" height="14.17" />  </clipPath></defs><g clip-path="url(#cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==)"><text x="15.82" y="11.42" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">0</text><line x1="15.82" y1="14.17" x2="15.82" y2="0.0000000000000018" style="stroke-width: 1.07; stroke-linecap: butt;"></line><line x1="48.66" y1="8.66" x2="105.06" y2="8.66" style="stroke-width: 2.13; stroke: #BEBEBE; stroke-opacity: 0.75;"></line><circle cx="69.06" cy="8.66" r="2.67" style="stroke-width: 1.06; stroke: #FFFFFF; fill: #000000;"></circle></g></g></svg></td></tr>
     <tr><td headers="Age group level_5 level" class="gt_row gt_center">65-74</td>
 <td headers="Age group level_5 rows" class="gt_row gt_right">161</td>
 <td headers="Age group level_5 outcome" class="gt_row gt_right">55</td>
@@ -1300,7 +1311,7 @@ height: 0px !important;
 <td headers="Age group level_5 conf.low" class="gt_row gt_right">24.66</td>
 <td headers="Age group level_5 conf.high" class="gt_row gt_right">2,538</td>
 <td headers="Age group level_5 significance" class="gt_row gt_left">Significant</td>
-<td headers="Age group level_5 plot_or" class="gt_row gt_center"><?xml version="1.0" encoding="UTF-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="127.56pt" height="14.17pt" viewBox="0 0 127.56 14.17"><g class="svglite"><defs>  <style type="text/css"> .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle { fill: none; stroke: #000000; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 10.00; } .svglite text { white-space: pre; } .svglite g.glyphgroup path { fill: inherit; stroke: none; } </style></defs><rect width="100%" height="100%" style="stroke: none; fill: none;" /><defs>  <clipPath id="cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==">    <rect x="0.00" y="0.00" width="127.56" height="14.17" />  </clipPath></defs><g clip-path="url(#cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==)"><text x="15.82" y="11.42" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">0</text><line x1="15.82" y1="14.17" x2="15.82" y2="0.0000000000000018" style="stroke-width: 1.07; stroke-linecap: butt;"></line><line x1="55.18" y1="8.66" x2="112.10" y2="8.66" style="stroke-width: 2.13; stroke: #BEBEBE; stroke-opacity: 0.75;"></line><circle cx="75.96" cy="8.66" r="2.67" style="stroke-width: 1.06; stroke: #FFFFFF; fill: #000000;"></circle><polygon points="111.48,6.69 112.04,6.69 112.04,6.69 112.04,6.69 112.04,6.69 112.04,6.69 112.04,6.69 112.04,6.69 112.04,6.69 112.04,6.69 112.04,6.69 112.04,6.69 112.04,6.69 112.04,6.69 112.04,5.56 112.04,5.56 112.04,5.56 112.04,5.56 112.04,5.56 112.04,5.56 112.04,5.56 112.04,5.56 112.04,5.56 112.04,5.56 112.04,5.56 112.04,5.56 111.48,5.56 111.48,5.56 111.48,5.56 111.48,5.56 111.48,5.56 111.48,5.56 111.48,5.56 111.48,5.56 111.48,5.56 111.48,5.56 111.48,5.56 111.48,5.56 111.48,5.56 111.48,6.69 111.48,6.69 111.48,6.69 111.48,6.69 111.48,6.69 111.48,6.69 111.48,6.69 111.48,6.69 111.48,6.69 111.48,6.69 111.48,6.69 111.48,6.69 " style="stroke-width: 0.00;"></polygon><text x="112.04" y="6.48" text-anchor="end" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">8</text><polygon points="55.24,6.69 55.80,6.69 55.80,6.69 55.80,6.69 55.80,6.69 55.80,6.69 55.80,6.69 55.80,6.69 55.80,6.69 55.80,6.69 55.80,6.69 55.80,6.69 55.80,6.69 55.80,6.69 55.80,5.56 55.80,5.56 55.80,5.56 55.80,5.56 55.80,5.56 55.80,5.56 55.80,5.56 55.80,5.56 55.80,5.56 55.80,5.56 55.80,5.56 55.80,5.56 55.24,5.56 55.24,5.56 55.24,5.56 55.24,5.56 55.24,5.56 55.24,5.56 55.24,5.56 55.24,5.56 55.24,5.56 55.24,5.56 55.24,5.56 55.24,5.56 55.24,5.56 55.24,6.69 55.24,6.69 55.24,6.69 55.24,6.69 55.24,6.69 55.24,6.69 55.24,6.69 55.24,6.69 55.24,6.69 55.24,6.69 55.24,6.69 55.24,6.69 " style="stroke-width: 0.00;"></polygon><text x="55.24" y="6.48" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">3</text></g></g></svg></td></tr>
+<td headers="Age group level_5 plot_or" class="gt_row gt_center"><?xml version="1.0" encoding="UTF-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="127.56pt" height="14.17pt" viewBox="0 0 127.56 14.17"><g class="svglite"><defs>  <style type="text/css"> .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle { fill: none; stroke: #000000; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 10.00; } .svglite text { white-space: pre; } .svglite g.glyphgroup path { fill: inherit; stroke: none; } </style></defs><rect width="100%" height="100%" style="stroke: none; fill: none;" /><defs>  <clipPath id="cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==">    <rect x="0.00" y="0.00" width="127.56" height="14.17" />  </clipPath></defs><g clip-path="url(#cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==)"><text x="15.82" y="11.42" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">0</text><line x1="15.82" y1="14.17" x2="15.82" y2="0.0000000000000018" style="stroke-width: 1.07; stroke-linecap: butt;"></line><line x1="55.18" y1="8.66" x2="112.10" y2="8.66" style="stroke-width: 2.13; stroke: #BEBEBE; stroke-opacity: 0.75;"></line><circle cx="75.96" cy="8.66" r="2.67" style="stroke-width: 1.06; stroke: #FFFFFF; fill: #000000;"></circle></g></g></svg></td></tr>
     <tr><td headers="Age group level_6 level" class="gt_row gt_center">75+</td>
 <td headers="Age group level_6 rows" class="gt_row gt_right">44</td>
 <td headers="Age group level_6 outcome" class="gt_row gt_right">13</td>
@@ -1312,7 +1323,7 @@ height: 0px !important;
 <td headers="Age group level_6 conf.low" class="gt_row gt_right">20.07</td>
 <td headers="Age group level_6 conf.high" class="gt_row gt_right">2,478</td>
 <td headers="Age group level_6 significance" class="gt_row gt_left">Significant</td>
-<td headers="Age group level_6 plot_or" class="gt_row gt_center"><?xml version="1.0" encoding="UTF-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="127.56pt" height="14.17pt" viewBox="0 0 127.56 14.17"><g class="svglite"><defs>  <style type="text/css"> .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle { fill: none; stroke: #000000; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 10.00; } .svglite text { white-space: pre; } .svglite g.glyphgroup path { fill: inherit; stroke: none; } </style></defs><rect width="100%" height="100%" style="stroke: none; fill: none;" /><defs>  <clipPath id="cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==">    <rect x="0.00" y="0.00" width="127.56" height="14.17" />  </clipPath></defs><g clip-path="url(#cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==)"><text x="15.82" y="11.42" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">0</text><line x1="15.82" y1="14.17" x2="15.82" y2="0.0000000000000018" style="stroke-width: 1.07; stroke-linecap: butt;"></line><line x1="52.66" y1="8.66" x2="111.80" y2="8.66" style="stroke-width: 2.13; stroke: #BEBEBE; stroke-opacity: 0.75;"></line><circle cx="75.10" cy="8.66" r="2.67" style="stroke-width: 1.06; stroke: #FFFFFF; fill: #000000;"></circle><polygon points="111.19,6.69 111.75,6.69 111.75,6.69 111.75,6.69 111.75,6.69 111.75,6.69 111.75,6.69 111.75,6.69 111.75,6.69 111.75,6.69 111.75,6.69 111.75,6.69 111.75,6.69 111.75,6.69 111.75,5.56 111.75,5.56 111.75,5.56 111.75,5.56 111.75,5.56 111.75,5.56 111.75,5.56 111.75,5.56 111.75,5.56 111.75,5.56 111.75,5.56 111.75,5.56 111.19,5.56 111.19,5.56 111.19,5.56 111.19,5.56 111.19,5.56 111.19,5.56 111.19,5.56 111.19,5.56 111.19,5.56 111.19,5.56 111.19,5.56 111.19,5.56 111.19,5.56 111.19,6.69 111.19,6.69 111.19,6.69 111.19,6.69 111.19,6.69 111.19,6.69 111.19,6.69 111.19,6.69 111.19,6.69 111.19,6.69 111.19,6.69 111.19,6.69 " style="stroke-width: 0.00;"></polygon><text x="111.75" y="6.48" text-anchor="end" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">8</text><polygon points="52.71,6.69 53.27,6.69 53.27,6.69 53.27,6.69 53.27,6.69 53.27,6.69 53.27,6.69 53.27,6.69 53.27,6.69 53.27,6.69 53.27,6.69 53.27,6.69 53.27,6.69 53.27,6.69 53.27,5.56 53.27,5.56 53.27,5.56 53.27,5.56 53.27,5.56 53.27,5.56 53.27,5.56 53.27,5.56 53.27,5.56 53.27,5.56 53.27,5.56 53.27,5.56 52.71,5.56 52.71,5.56 52.71,5.56 52.71,5.56 52.71,5.56 52.71,5.56 52.71,5.56 52.71,5.56 52.71,5.56 52.71,5.56 52.71,5.56 52.71,5.56 52.71,5.56 52.71,6.69 52.71,6.69 52.71,6.69 52.71,6.69 52.71,6.69 52.71,6.69 52.71,6.69 52.71,6.69 52.71,6.69 52.71,6.69 52.71,6.69 52.71,6.69 " style="stroke-width: 0.00;"></polygon><text x="52.71" y="6.48" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">3</text></g></g></svg></td></tr>
+<td headers="Age group level_6 plot_or" class="gt_row gt_center"><?xml version="1.0" encoding="UTF-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="127.56pt" height="14.17pt" viewBox="0 0 127.56 14.17"><g class="svglite"><defs>  <style type="text/css"> .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle { fill: none; stroke: #000000; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 10.00; } .svglite text { white-space: pre; } .svglite g.glyphgroup path { fill: inherit; stroke: none; } </style></defs><rect width="100%" height="100%" style="stroke: none; fill: none;" /><defs>  <clipPath id="cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==">    <rect x="0.00" y="0.00" width="127.56" height="14.17" />  </clipPath></defs><g clip-path="url(#cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==)"><text x="15.82" y="11.42" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">0</text><line x1="15.82" y1="14.17" x2="15.82" y2="0.0000000000000018" style="stroke-width: 1.07; stroke-linecap: butt;"></line><line x1="52.66" y1="8.66" x2="111.80" y2="8.66" style="stroke-width: 2.13; stroke: #BEBEBE; stroke-opacity: 0.75;"></line><circle cx="75.10" cy="8.66" r="2.67" style="stroke-width: 1.06; stroke: #FFFFFF; fill: #000000;"></circle></g></g></svg></td></tr>
     <tr class="gt_row_group_first"><td headers="Alcohol
 consumption stub_1_7 stub_1" rowspan="4" class="gt_row gt_left gt_stub_row_group">Alcohol
 consumption</td>
@@ -1363,7 +1374,7 @@ consumption level_8 conf.high" class="gt_row gt_right">6.948</td>
 <td headers="Alcohol
 consumption level_8 significance" class="gt_row gt_left">Significant</td>
 <td headers="Alcohol
-consumption level_8 plot_or" class="gt_row gt_center"><?xml version="1.0" encoding="UTF-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="127.56pt" height="14.17pt" viewBox="0 0 127.56 14.17"><g class="svglite"><defs>  <style type="text/css"> .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle { fill: none; stroke: #000000; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 10.00; } .svglite text { white-space: pre; } .svglite g.glyphgroup path { fill: inherit; stroke: none; } </style></defs><rect width="100%" height="100%" style="stroke: none; fill: none;" /><defs>  <clipPath id="cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==">    <rect x="0.00" y="0.00" width="127.56" height="14.17" />  </clipPath></defs><g clip-path="url(#cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==)"><text x="15.82" y="11.42" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">0</text><line x1="15.82" y1="14.17" x2="15.82" y2="0.0000000000000018" style="stroke-width: 1.07; stroke-linecap: butt;"></line><line x1="27.55" y1="8.66" x2="39.63" y2="8.66" style="stroke-width: 2.13; stroke: #BEBEBE; stroke-opacity: 0.75;"></line><circle cx="33.44" cy="8.66" r="2.67" style="stroke-width: 1.06; stroke: #FFFFFF; fill: #000000;"></circle><polygon points="39.01,6.69 39.57,6.69 39.57,6.69 39.57,6.69 39.57,6.69 39.57,6.69 39.57,6.69 39.57,6.69 39.57,6.69 39.57,6.69 39.57,6.69 39.57,6.69 39.57,6.69 39.57,6.69 39.57,5.56 39.57,5.56 39.57,5.56 39.57,5.56 39.57,5.56 39.57,5.56 39.57,5.56 39.57,5.56 39.57,5.56 39.57,5.56 39.57,5.56 39.57,5.56 39.01,5.56 39.01,5.56 39.01,5.56 39.01,5.56 39.01,5.56 39.01,5.56 39.01,5.56 39.01,5.56 39.01,5.56 39.01,5.56 39.01,5.56 39.01,5.56 39.01,5.56 39.01,6.69 39.01,6.69 39.01,6.69 39.01,6.69 39.01,6.69 39.01,6.69 39.01,6.69 39.01,6.69 39.01,6.69 39.01,6.69 39.01,6.69 39.01,6.69 " style="stroke-width: 0.00;"></polygon><text x="39.57" y="6.48" text-anchor="end" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">2</text><polygon points="27.61,6.69 28.17,6.69 28.17,6.69 28.17,6.69 28.17,6.69 28.17,6.69 28.17,6.69 28.17,6.69 28.17,6.69 28.17,6.69 28.17,6.69 28.17,6.69 28.17,6.69 28.17,6.69 28.17,5.56 28.17,5.56 28.17,5.56 28.17,5.56 28.17,5.56 28.17,5.56 28.17,5.56 28.17,5.56 28.17,5.56 28.17,5.56 28.17,5.56 28.17,5.56 27.61,5.56 27.61,5.56 27.61,5.56 27.61,5.56 27.61,5.56 27.61,5.56 27.61,5.56 27.61,5.56 27.61,5.56 27.61,5.56 27.61,5.56 27.61,5.56 27.61,5.56 27.61,6.69 27.61,6.69 27.61,6.69 27.61,6.69 27.61,6.69 27.61,6.69 27.61,6.69 27.61,6.69 27.61,6.69 27.61,6.69 27.61,6.69 27.61,6.69 " style="stroke-width: 0.00;"></polygon><text x="27.61" y="6.48" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">1</text></g></g></svg></td></tr>
+consumption level_8 plot_or" class="gt_row gt_center"><?xml version="1.0" encoding="UTF-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="127.56pt" height="14.17pt" viewBox="0 0 127.56 14.17"><g class="svglite"><defs>  <style type="text/css"> .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle { fill: none; stroke: #000000; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 10.00; } .svglite text { white-space: pre; } .svglite g.glyphgroup path { fill: inherit; stroke: none; } </style></defs><rect width="100%" height="100%" style="stroke: none; fill: none;" /><defs>  <clipPath id="cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==">    <rect x="0.00" y="0.00" width="127.56" height="14.17" />  </clipPath></defs><g clip-path="url(#cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==)"><text x="15.82" y="11.42" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">0</text><line x1="15.82" y1="14.17" x2="15.82" y2="0.0000000000000018" style="stroke-width: 1.07; stroke-linecap: butt;"></line><line x1="27.55" y1="8.66" x2="39.63" y2="8.66" style="stroke-width: 2.13; stroke: #BEBEBE; stroke-opacity: 0.75;"></line><circle cx="33.44" cy="8.66" r="2.67" style="stroke-width: 1.06; stroke: #FFFFFF; fill: #000000;"></circle></g></g></svg></td></tr>
     <tr><td headers="Alcohol
 consumption level_9 level" class="gt_row gt_center">80-119</td>
 <td headers="Alcohol
@@ -1387,7 +1398,7 @@ consumption level_9 conf.high" class="gt_row gt_right">12.81</td>
 <td headers="Alcohol
 consumption level_9 significance" class="gt_row gt_left">Significant</td>
 <td headers="Alcohol
-consumption level_9 plot_or" class="gt_row gt_center"><?xml version="1.0" encoding="UTF-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="127.56pt" height="14.17pt" viewBox="0 0 127.56 14.17"><g class="svglite"><defs>  <style type="text/css"> .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle { fill: none; stroke: #000000; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 10.00; } .svglite text { white-space: pre; } .svglite g.glyphgroup path { fill: inherit; stroke: none; } </style></defs><rect width="100%" height="100%" style="stroke: none; fill: none;" /><defs>  <clipPath id="cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==">    <rect x="0.00" y="0.00" width="127.56" height="14.17" />  </clipPath></defs><g clip-path="url(#cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==)"><text x="15.82" y="11.42" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">0</text><line x1="15.82" y1="14.17" x2="15.82" y2="0.0000000000000018" style="stroke-width: 1.07; stroke-linecap: butt;"></line><line x1="33.39" y1="8.66" x2="47.14" y2="8.66" style="stroke-width: 2.13; stroke: #BEBEBE; stroke-opacity: 0.75;"></line><circle cx="40.15" cy="8.66" r="2.67" style="stroke-width: 1.06; stroke: #FFFFFF; fill: #000000;"></circle><polygon points="46.52,6.69 47.08,6.69 47.08,6.69 47.08,6.69 47.08,6.69 47.08,6.69 47.08,6.69 47.08,6.69 47.08,6.69 47.08,6.69 47.08,6.69 47.08,6.69 47.08,6.69 47.08,6.69 47.08,5.56 47.08,5.56 47.08,5.56 47.08,5.56 47.08,5.56 47.08,5.56 47.08,5.56 47.08,5.56 47.08,5.56 47.08,5.56 47.08,5.56 47.08,5.56 46.52,5.56 46.52,5.56 46.52,5.56 46.52,5.56 46.52,5.56 46.52,5.56 46.52,5.56 46.52,5.56 46.52,5.56 46.52,5.56 46.52,5.56 46.52,5.56 46.52,5.56 46.52,6.69 46.52,6.69 46.52,6.69 46.52,6.69 46.52,6.69 46.52,6.69 46.52,6.69 46.52,6.69 46.52,6.69 46.52,6.69 46.52,6.69 46.52,6.69 " style="stroke-width: 0.00;"></polygon><text x="47.08" y="6.48" text-anchor="end" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">3</text><polygon points="33.45,6.69 34.01,6.69 34.01,6.69 34.01,6.69 34.01,6.69 34.01,6.69 34.01,6.69 34.01,6.69 34.01,6.69 34.01,6.69 34.01,6.69 34.01,6.69 34.01,6.69 34.01,6.69 34.01,5.56 34.01,5.56 34.01,5.56 34.01,5.56 34.01,5.56 34.01,5.56 34.01,5.56 34.01,5.56 34.01,5.56 34.01,5.56 34.01,5.56 34.01,5.56 33.45,5.56 33.45,5.56 33.45,5.56 33.45,5.56 33.45,5.56 33.45,5.56 33.45,5.56 33.45,5.56 33.45,5.56 33.45,5.56 33.45,5.56 33.45,5.56 33.45,5.56 33.45,6.69 33.45,6.69 33.45,6.69 33.45,6.69 33.45,6.69 33.45,6.69 33.45,6.69 33.45,6.69 33.45,6.69 33.45,6.69 33.45,6.69 33.45,6.69 " style="stroke-width: 0.00;"></polygon><text x="33.45" y="6.48" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">1</text></g></g></svg></td></tr>
+consumption level_9 plot_or" class="gt_row gt_center"><?xml version="1.0" encoding="UTF-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="127.56pt" height="14.17pt" viewBox="0 0 127.56 14.17"><g class="svglite"><defs>  <style type="text/css"> .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle { fill: none; stroke: #000000; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 10.00; } .svglite text { white-space: pre; } .svglite g.glyphgroup path { fill: inherit; stroke: none; } </style></defs><rect width="100%" height="100%" style="stroke: none; fill: none;" /><defs>  <clipPath id="cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==">    <rect x="0.00" y="0.00" width="127.56" height="14.17" />  </clipPath></defs><g clip-path="url(#cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==)"><text x="15.82" y="11.42" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">0</text><line x1="15.82" y1="14.17" x2="15.82" y2="0.0000000000000018" style="stroke-width: 1.07; stroke-linecap: butt;"></line><line x1="33.39" y1="8.66" x2="47.14" y2="8.66" style="stroke-width: 2.13; stroke: #BEBEBE; stroke-opacity: 0.75;"></line><circle cx="40.15" cy="8.66" r="2.67" style="stroke-width: 1.06; stroke: #FFFFFF; fill: #000000;"></circle></g></g></svg></td></tr>
     <tr><td headers="Alcohol
 consumption level_10 level" class="gt_row gt_center">120+</td>
 <td headers="Alcohol
@@ -1411,7 +1422,7 @@ consumption level_10 conf.high" class="gt_row gt_right">80.36</td>
 <td headers="Alcohol
 consumption level_10 significance" class="gt_row gt_left">Significant</td>
 <td headers="Alcohol
-consumption level_10 plot_or" class="gt_row gt_center"><?xml version="1.0" encoding="UTF-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="127.56pt" height="14.17pt" viewBox="0 0 127.56 14.17"><g class="svglite"><defs>  <style type="text/css"> .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle { fill: none; stroke: #000000; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 10.00; } .svglite text { white-space: pre; } .svglite g.glyphgroup path { fill: inherit; stroke: none; } </style></defs><rect width="100%" height="100%" style="stroke: none; fill: none;" /><defs>  <clipPath id="cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==">    <rect x="0.00" y="0.00" width="127.56" height="14.17" />  </clipPath></defs><g clip-path="url(#cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==)"><text x="15.82" y="11.42" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">0</text><line x1="15.82" y1="14.17" x2="15.82" y2="0.0000000000000018" style="stroke-width: 1.07; stroke-linecap: butt;"></line><line x1="51.09" y1="8.66" x2="69.69" y2="8.66" style="stroke-width: 2.13; stroke: #BEBEBE; stroke-opacity: 0.75;"></line><circle cx="60.07" cy="8.66" r="2.67" style="stroke-width: 1.06; stroke: #FFFFFF; fill: #000000;"></circle><polygon points="69.07,6.69 69.64,6.69 69.64,6.69 69.64,6.69 69.64,6.69 69.64,6.69 69.64,6.69 69.64,6.69 69.64,6.69 69.64,6.69 69.64,6.69 69.64,6.69 69.64,6.69 69.64,6.69 69.64,5.56 69.64,5.56 69.64,5.56 69.64,5.56 69.64,5.56 69.64,5.56 69.64,5.56 69.64,5.56 69.64,5.56 69.64,5.56 69.64,5.56 69.64,5.56 69.07,5.56 69.07,5.56 69.07,5.56 69.07,5.56 69.07,5.56 69.07,5.56 69.07,5.56 69.07,5.56 69.07,5.56 69.07,5.56 69.07,5.56 69.07,5.56 69.07,5.56 69.07,6.69 69.07,6.69 69.07,6.69 69.07,6.69 69.07,6.69 69.07,6.69 69.07,6.69 69.07,6.69 69.07,6.69 69.07,6.69 69.07,6.69 69.07,6.69 " style="stroke-width: 0.00;"></polygon><text x="69.64" y="6.48" text-anchor="end" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">4</text><polygon points="51.15,6.69 51.71,6.69 51.71,6.69 51.71,6.69 51.71,6.69 51.71,6.69 51.71,6.69 51.71,6.69 51.71,6.69 51.71,6.69 51.71,6.69 51.71,6.69 51.71,6.69 51.71,6.69 51.71,5.56 51.71,5.56 51.71,5.56 51.71,5.56 51.71,5.56 51.71,5.56 51.71,5.56 51.71,5.56 51.71,5.56 51.71,5.56 51.71,5.56 51.71,5.56 51.15,5.56 51.15,5.56 51.15,5.56 51.15,5.56 51.15,5.56 51.15,5.56 51.15,5.56 51.15,5.56 51.15,5.56 51.15,5.56 51.15,5.56 51.15,5.56 51.15,5.56 51.15,6.69 51.15,6.69 51.15,6.69 51.15,6.69 51.15,6.69 51.15,6.69 51.15,6.69 51.15,6.69 51.15,6.69 51.15,6.69 51.15,6.69 51.15,6.69 " style="stroke-width: 0.00;"></polygon><text x="51.15" y="6.48" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">3</text></g></g></svg></td></tr>
+consumption level_10 plot_or" class="gt_row gt_center"><?xml version="1.0" encoding="UTF-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="127.56pt" height="14.17pt" viewBox="0 0 127.56 14.17"><g class="svglite"><defs>  <style type="text/css"> .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle { fill: none; stroke: #000000; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 10.00; } .svglite text { white-space: pre; } .svglite g.glyphgroup path { fill: inherit; stroke: none; } </style></defs><rect width="100%" height="100%" style="stroke: none; fill: none;" /><defs>  <clipPath id="cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==">    <rect x="0.00" y="0.00" width="127.56" height="14.17" />  </clipPath></defs><g clip-path="url(#cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==)"><text x="15.82" y="11.42" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">0</text><line x1="15.82" y1="14.17" x2="15.82" y2="0.0000000000000018" style="stroke-width: 1.07; stroke-linecap: butt;"></line><line x1="51.09" y1="8.66" x2="69.69" y2="8.66" style="stroke-width: 2.13; stroke: #BEBEBE; stroke-opacity: 0.75;"></line><circle cx="60.07" cy="8.66" r="2.67" style="stroke-width: 1.06; stroke: #FFFFFF; fill: #000000;"></circle></g></g></svg></td></tr>
     <tr class="gt_row_group_first"><td headers="Tobacco
 consumption stub_1_11 stub_1" rowspan="4" class="gt_row gt_left gt_stub_row_group">Tobacco
 consumption</td>
@@ -1462,7 +1473,7 @@ consumption level_12 conf.high" class="gt_row gt_right">2.423</td>
 <td headers="Tobacco
 consumption level_12 significance" class="gt_row gt_left">Not significant</td>
 <td headers="Tobacco
-consumption level_12 plot_or" class="gt_row gt_center"><?xml version="1.0" encoding="UTF-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="127.56pt" height="14.17pt" viewBox="0 0 127.56 14.17"><g class="svglite"><defs>  <style type="text/css"> .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle { fill: none; stroke: #000000; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 10.00; } .svglite text { white-space: pre; } .svglite g.glyphgroup path { fill: inherit; stroke: none; } </style></defs><rect width="100%" height="100%" style="stroke: none; fill: none;" /><defs>  <clipPath id="cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==">    <rect x="0.00" y="0.00" width="127.56" height="14.17" />  </clipPath></defs><g clip-path="url(#cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==)"><text x="15.82" y="11.42" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">0</text><line x1="15.82" y1="14.17" x2="15.82" y2="0.0000000000000018" style="stroke-width: 1.07; stroke-linecap: butt;"></line><line x1="15.68" y1="8.66" x2="26.69" y2="8.66" style="stroke-width: 2.13; stroke: #BEBEBE; stroke-opacity: 0.75;"></line><circle cx="21.20" cy="8.66" r="2.67" style="stroke-width: 1.06; stroke: #FFFFFF; fill: #000000;"></circle><polygon points="26.07,6.69 26.63,6.69 26.63,6.69 26.63,6.69 26.63,6.69 26.63,6.69 26.63,6.69 26.63,6.69 26.63,6.69 26.63,6.69 26.63,6.69 26.63,6.69 26.63,6.69 26.63,6.69 26.63,5.56 26.63,5.56 26.63,5.56 26.63,5.56 26.63,5.56 26.63,5.56 26.63,5.56 26.63,5.56 26.63,5.56 26.63,5.56 26.63,5.56 26.63,5.56 26.07,5.56 26.07,5.56 26.07,5.56 26.07,5.56 26.07,5.56 26.07,5.56 26.07,5.56 26.07,5.56 26.07,5.56 26.07,5.56 26.07,5.56 26.07,5.56 26.07,5.56 26.07,6.69 26.07,6.69 26.07,6.69 26.07,6.69 26.07,6.69 26.07,6.69 26.07,6.69 26.07,6.69 26.07,6.69 26.07,6.69 26.07,6.69 26.07,6.69 " style="stroke-width: 0.00;"></polygon><text x="26.63" y="6.48" text-anchor="end" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">1</text><polygon points="15.73,6.69 16.29,6.69 16.29,6.69 16.29,6.69 16.29,6.69 16.29,6.69 16.29,6.69 16.29,6.69 16.29,6.69 16.29,6.69 16.29,6.69 16.29,6.69 16.29,6.69 16.29,6.69 16.29,5.56 16.29,5.56 16.29,5.56 16.29,5.56 16.29,5.56 16.29,5.56 16.29,5.56 16.29,5.56 16.29,5.56 16.29,5.56 16.29,5.56 16.29,5.56 15.73,5.56 15.73,5.56 15.73,5.56 15.73,5.56 15.73,5.56 15.73,5.56 15.73,5.56 15.73,5.56 15.73,5.56 15.73,5.56 15.73,5.56 15.73,5.56 15.73,5.56 15.73,6.69 15.73,6.69 15.73,6.69 15.73,6.69 15.73,6.69 15.73,6.69 15.73,6.69 15.73,6.69 15.73,6.69 15.73,6.69 15.73,6.69 15.73,6.69 " style="stroke-width: 0.00;"></polygon><text x="15.73" y="6.48" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">0</text></g></g></svg></td></tr>
+consumption level_12 plot_or" class="gt_row gt_center"><?xml version="1.0" encoding="UTF-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="127.56pt" height="14.17pt" viewBox="0 0 127.56 14.17"><g class="svglite"><defs>  <style type="text/css"> .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle { fill: none; stroke: #000000; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 10.00; } .svglite text { white-space: pre; } .svglite g.glyphgroup path { fill: inherit; stroke: none; } </style></defs><rect width="100%" height="100%" style="stroke: none; fill: none;" /><defs>  <clipPath id="cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==">    <rect x="0.00" y="0.00" width="127.56" height="14.17" />  </clipPath></defs><g clip-path="url(#cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==)"><text x="15.82" y="11.42" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">0</text><line x1="15.82" y1="14.17" x2="15.82" y2="0.0000000000000018" style="stroke-width: 1.07; stroke-linecap: butt;"></line><line x1="15.68" y1="8.66" x2="26.69" y2="8.66" style="stroke-width: 2.13; stroke: #BEBEBE; stroke-opacity: 0.75;"></line><circle cx="21.20" cy="8.66" r="2.67" style="stroke-width: 1.06; stroke: #FFFFFF; fill: #000000;"></circle></g></g></svg></td></tr>
     <tr><td headers="Tobacco
 consumption level_13 level" class="gt_row gt_center">20-29</td>
 <td headers="Tobacco
@@ -1486,7 +1497,7 @@ consumption level_13 conf.high" class="gt_row gt_right">2.839</td>
 <td headers="Tobacco
 consumption level_13 significance" class="gt_row gt_left">Not significant</td>
 <td headers="Tobacco
-consumption level_13 plot_or" class="gt_row gt_center"><?xml version="1.0" encoding="UTF-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="127.56pt" height="14.17pt" viewBox="0 0 127.56 14.17"><g class="svglite"><defs>  <style type="text/css"> .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle { fill: none; stroke: #000000; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 10.00; } .svglite text { white-space: pre; } .svglite g.glyphgroup path { fill: inherit; stroke: none; } </style></defs><rect width="100%" height="100%" style="stroke: none; fill: none;" /><defs>  <clipPath id="cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==">    <rect x="0.00" y="0.00" width="127.56" height="14.17" />  </clipPath></defs><g clip-path="url(#cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==)"><text x="15.82" y="11.42" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">0</text><line x1="15.82" y1="14.17" x2="15.82" y2="0.0000000000000018" style="stroke-width: 1.07; stroke-linecap: butt;"></line><line x1="15.46" y1="8.66" x2="28.64" y2="8.66" style="stroke-width: 2.13; stroke: #BEBEBE; stroke-opacity: 0.75;"></line><circle cx="22.11" cy="8.66" r="2.67" style="stroke-width: 1.06; stroke: #FFFFFF; fill: #000000;"></circle><polygon points="28.02,6.69 28.58,6.69 28.58,6.69 28.58,6.69 28.58,6.69 28.58,6.69 28.58,6.69 28.58,6.69 28.58,6.69 28.58,6.69 28.58,6.69 28.58,6.69 28.58,6.69 28.58,6.69 28.58,5.56 28.58,5.56 28.58,5.56 28.58,5.56 28.58,5.56 28.58,5.56 28.58,5.56 28.58,5.56 28.58,5.56 28.58,5.56 28.58,5.56 28.58,5.56 28.02,5.56 28.02,5.56 28.02,5.56 28.02,5.56 28.02,5.56 28.02,5.56 28.02,5.56 28.02,5.56 28.02,5.56 28.02,5.56 28.02,5.56 28.02,5.56 28.02,5.56 28.02,6.69 28.02,6.69 28.02,6.69 28.02,6.69 28.02,6.69 28.02,6.69 28.02,6.69 28.02,6.69 28.02,6.69 28.02,6.69 28.02,6.69 28.02,6.69 " style="stroke-width: 0.00;"></polygon><text x="28.58" y="6.48" text-anchor="end" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">1</text><polygon points="15.52,6.69 16.08,6.69 16.08,6.69 16.08,6.69 16.08,6.69 16.08,6.69 16.08,6.69 16.08,6.69 16.08,6.69 16.08,6.69 16.08,6.69 16.08,6.69 16.08,6.69 16.08,6.69 16.08,5.56 16.08,5.56 16.08,5.56 16.08,5.56 16.08,5.56 16.08,5.56 16.08,5.56 16.08,5.56 16.08,5.56 16.08,5.56 16.08,5.56 16.08,5.56 15.52,5.56 15.52,5.56 15.52,5.56 15.52,5.56 15.52,5.56 15.52,5.56 15.52,5.56 15.52,5.56 15.52,5.56 15.52,5.56 15.52,5.56 15.52,5.56 15.52,5.56 15.52,6.69 15.52,6.69 15.52,6.69 15.52,6.69 15.52,6.69 15.52,6.69 15.52,6.69 15.52,6.69 15.52,6.69 15.52,6.69 15.52,6.69 15.52,6.69 " style="stroke-width: 0.00;"></polygon><text x="15.52" y="6.48" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">0</text></g></g></svg></td></tr>
+consumption level_13 plot_or" class="gt_row gt_center"><?xml version="1.0" encoding="UTF-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="127.56pt" height="14.17pt" viewBox="0 0 127.56 14.17"><g class="svglite"><defs>  <style type="text/css"> .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle { fill: none; stroke: #000000; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 10.00; } .svglite text { white-space: pre; } .svglite g.glyphgroup path { fill: inherit; stroke: none; } </style></defs><rect width="100%" height="100%" style="stroke: none; fill: none;" /><defs>  <clipPath id="cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==">    <rect x="0.00" y="0.00" width="127.56" height="14.17" />  </clipPath></defs><g clip-path="url(#cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==)"><text x="15.82" y="11.42" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">0</text><line x1="15.82" y1="14.17" x2="15.82" y2="0.0000000000000018" style="stroke-width: 1.07; stroke-linecap: butt;"></line><line x1="15.46" y1="8.66" x2="28.64" y2="8.66" style="stroke-width: 2.13; stroke: #BEBEBE; stroke-opacity: 0.75;"></line><circle cx="22.11" cy="8.66" r="2.67" style="stroke-width: 1.06; stroke: #FFFFFF; fill: #000000;"></circle></g></g></svg></td></tr>
     <tr><td headers="Tobacco
 consumption level_14 level" class="gt_row gt_center">30+</td>
 <td headers="Tobacco
@@ -1510,7 +1521,7 @@ consumption level_14 conf.high" class="gt_row gt_right">10.18</td>
 <td headers="Tobacco
 consumption level_14 significance" class="gt_row gt_left">Significant</td>
 <td headers="Tobacco
-consumption level_14 plot_or" class="gt_row gt_center"><?xml version="1.0" encoding="UTF-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="127.56pt" height="14.17pt" viewBox="0 0 127.56 14.17"><g class="svglite"><defs>  <style type="text/css"> .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle { fill: none; stroke: #000000; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 10.00; } .svglite text { white-space: pre; } .svglite g.glyphgroup path { fill: inherit; stroke: none; } </style></defs><rect width="100%" height="100%" style="stroke: none; fill: none;" /><defs>  <clipPath id="cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==">    <rect x="0.00" y="0.00" width="127.56" height="14.17" />  </clipPath></defs><g clip-path="url(#cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==)"><text x="15.82" y="11.42" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">0</text><line x1="15.82" y1="14.17" x2="15.82" y2="0.0000000000000018" style="stroke-width: 1.07; stroke-linecap: butt;"></line><line x1="27.70" y1="8.66" x2="44.32" y2="8.66" style="stroke-width: 2.13; stroke: #BEBEBE; stroke-opacity: 0.75;"></line><circle cx="35.97" cy="8.66" r="2.67" style="stroke-width: 1.06; stroke: #FFFFFF; fill: #000000;"></circle><polygon points="43.70,6.69 44.26,6.69 44.26,6.69 44.26,6.69 44.26,6.69 44.26,6.69 44.26,6.69 44.26,6.69 44.26,6.69 44.26,6.69 44.26,6.69 44.26,6.69 44.26,6.69 44.26,6.69 44.26,5.56 44.26,5.56 44.26,5.56 44.26,5.56 44.26,5.56 44.26,5.56 44.26,5.56 44.26,5.56 44.26,5.56 44.26,5.56 44.26,5.56 44.26,5.56 43.70,5.56 43.70,5.56 43.70,5.56 43.70,5.56 43.70,5.56 43.70,5.56 43.70,5.56 43.70,5.56 43.70,5.56 43.70,5.56 43.70,5.56 43.70,5.56 43.70,5.56 43.70,6.69 43.70,6.69 43.70,6.69 43.70,6.69 43.70,6.69 43.70,6.69 43.70,6.69 43.70,6.69 43.70,6.69 43.70,6.69 43.70,6.69 43.70,6.69 " style="stroke-width: 0.00;"></polygon><text x="44.26" y="6.48" text-anchor="end" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">2</text><polygon points="27.75,6.69 28.32,6.69 28.32,6.69 28.32,6.69 28.32,6.69 28.32,6.69 28.32,6.69 28.32,6.69 28.32,6.69 28.32,6.69 28.32,6.69 28.32,6.69 28.32,6.69 28.32,6.69 28.32,5.56 28.32,5.56 28.32,5.56 28.32,5.56 28.32,5.56 28.32,5.56 28.32,5.56 28.32,5.56 28.32,5.56 28.32,5.56 28.32,5.56 28.32,5.56 27.75,5.56 27.75,5.56 27.75,5.56 27.75,5.56 27.75,5.56 27.75,5.56 27.75,5.56 27.75,5.56 27.75,5.56 27.75,5.56 27.75,5.56 27.75,5.56 27.75,5.56 27.75,6.69 27.75,6.69 27.75,6.69 27.75,6.69 27.75,6.69 27.75,6.69 27.75,6.69 27.75,6.69 27.75,6.69 27.75,6.69 27.75,6.69 27.75,6.69 " style="stroke-width: 0.00;"></polygon><text x="27.75" y="6.48" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">1</text></g></g></svg></td></tr>
+consumption level_14 plot_or" class="gt_row gt_center"><?xml version="1.0" encoding="UTF-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="127.56pt" height="14.17pt" viewBox="0 0 127.56 14.17"><g class="svglite"><defs>  <style type="text/css"> .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle { fill: none; stroke: #000000; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 10.00; } .svglite text { white-space: pre; } .svglite g.glyphgroup path { fill: inherit; stroke: none; } </style></defs><rect width="100%" height="100%" style="stroke: none; fill: none;" /><defs>  <clipPath id="cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==">    <rect x="0.00" y="0.00" width="127.56" height="14.17" />  </clipPath></defs><g clip-path="url(#cpMC4wMHwxMjcuNTZ8MC4wMHwxNC4xNw==)"><text x="15.82" y="11.42" style="font-size: 0.00px; font-weight: bold; font-family: &quot;Arial&quot;;" textLength="0.56px" lengthAdjust="spacingAndGlyphs">0</text><line x1="15.82" y1="14.17" x2="15.82" y2="0.0000000000000018" style="stroke-width: 1.07; stroke-linecap: butt;"></line><line x1="27.70" y1="8.66" x2="44.32" y2="8.66" style="stroke-width: 2.13; stroke: #BEBEBE; stroke-opacity: 0.75;"></line><circle cx="35.97" cy="8.66" r="2.67" style="stroke-width: 1.06; stroke: #FFFFFF; fill: #000000;"></circle></g></g></svg></td></tr>
   </tbody>
   
   <tfoot class="gt_footnotes">
