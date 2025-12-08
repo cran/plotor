@@ -8,6 +8,7 @@
 #' @param glm_model_results Results from a binomial Generalised Linear Model (GLM), as produced by [stats::glm()].
 #' @param conf_level Numeric value between 0.001 and 0.999 (default = 0.95) specifying the confidence level for the confidence interval.
 #' @param confint_fast_estimate Boolean (default = `FALSE`) indicating whether to use a faster estimate of the confidence interval. Note: this assumes normally distributed data, which may not be suitable for your data.
+#' @param assumption_checks Boolean (default = `TRUE`) indicating whether to conduct checks to ensure that the assumptions of logistic regression are met.
 #'
 #' @return
 #' The function returns an object of class `gg` and `ggplot`, which can be
@@ -46,16 +47,33 @@
 #'
 #' # Produce the Odds Ratio plot
 #' plot_or(lr)
-plot_or <- function(glm_model_results,
-                    conf_level = 0.95,
-                    confint_fast_estimate = FALSE) {
-
+plot_or <- function(
+  glm_model_results,
+  conf_level = 0.95,
+  confint_fast_estimate = FALSE,
+  assumption_checks = TRUE
+) {
   # data and input checks ----
   # check the model is logistic regression
   valid_glm_model <- validate_glm_model(glm_model_results)
 
-  # check logistic regression assumptions
-  valid_assumptions <- check_assumptions(glm = glm_model_results, details = FALSE)
+  # check logistic regression assumptions if the user requested it
+  if (assumption_checks) {
+    valid_assumptions <- check_assumptions(
+      glm = glm_model_results,
+      details = FALSE,
+      confint_fast_estimate = confint_fast_estimate
+    )
+
+    # recommend to the user to use `check_or` for more feedback if at least one
+    # test fails
+    suggest_check_or(
+      # pass in the name of the model
+      glm_name = deparse(substitute(glm_model_results)),
+      valid_assumptions = valid_assumptions,
+      assumption_checks = assumption_checks
+    )
+  }
 
   # limit conf_level to between 0.001 and 0.999
   conf_level <- validate_conf_level_input(conf_level)
@@ -70,51 +88,53 @@ plot_or <- function(glm_model_results,
   )
 
   # plot the results
-  p <- plot_odds_ratio(df = df, model = glm_model_results, conf_level = conf_level)
+  p <- plot_odds_ratio(
+    df = df,
+    model = glm_model_results,
+    conf_level = conf_level
+  )
 
   return(p)
 }
 
 #' Table OR
 #'
-#' Produces a formatted table showing the outputs from the Odds Ratio analysis,
-#' including details on covariate characteristics and model results.
+#' @description
+#' Produces a formatted table displaying the outputs from the Odds Ratio
+#' analysis, including details on covariate characteristics and model results.
 #'
 #' @details
 #' The table includes the following information:
-#' * Covariate characteristics:
-#'   * Number of observations for each characteristic
-#'   * Number of observiations resulting in the outcome of interest
-#'   * Conversion rate of outcome by the number of observations
+#' - **Covariate Characteristics**:
+#'   - Number of observations for each characteristic
+#'   - Number of observations resulting in the outcome of interest
+#'   - Conversion rate of the outcome based on the number of observations
 #'
-#' * Model results:
-#'   * Estimated Odds Ratio, standard error and p-value
-#'   * Calculated confidence interval for the specified confidence level
+#' - **Model Results**:
+#'   - Estimated Odds Ratio, standard error, and p-value
+#'   - Calculated confidence interval for the specified confidence level
 #'
-#' * A visualisation of the OR plot is also provided for an at-a-glance view of
-#' the model results
-#'
-#' Includes details on the characteristics of the covariates, such as:
-#' * the number of observations for each characteristic,
-#' * the number of observations resulting in the outcome of interest,
-#' * the conversion rate of outcome by the number of observations,
-#'
-#' Details are calculated showing the:
-#' * estimated Odds Ratio, standard error and p-value,
-#' * calculated confidence interval for the confidence level,
-#'
-#' Also included is a visualisation of the OR plot to provide an at-a-glance
+#' A visualisation of the Odds Ratio plot is also provided for an at-a-glance
 #' view of the model results.
+#'
+#' If `anonymise_counts` is set to `TRUE`, counts below 10 are suppressed as
+#' `<10`, and other counts are rounded to the nearest multiple of 5. This
+#' feature is helpful when working with sensitive data.
 #'
 #' @param glm_model_results Results from a binomial Generalised Linear Model (GLM), as produced by [stats::glm()].
 #' @param conf_level Numeric value between 0.001 and 0.999 (default = 0.95) specifying the confidence level for the confidence interval.
-#' @param output String describing of the output type (default = 'tibble'). Options include 'tibble' and 'gt'.
+#' @param output String describing the output type (default = "tibble"). Options include "tibble" and "gt".
+#' @param output_type String description of the output type (default = "multivariable"). Options include "multivariable" and "uni_and_multi". Selecting "multivariable" will produce a summary table of the supplied multivariable model. Selecting "uni_and_multi" will produce a summary table showing estimates of the Odds Ratio, Confidence Intervals and p-values produced using a univariable logistic regression model for each predctor along with the adjusted Odds Ratio, Confidence Intervals and p-values from the supplied multivariable model.
 #' @param confint_fast_estimate Boolean (default = `FALSE`) indicating whether to use a faster estimate of the confidence interval. Note: this assumes normally distributed data, which may not be suitable for your data.
+#' @param assumption_checks Boolean (default = `TRUE`) indicating whether to conduct checks to ensure that the assumptions of logistic regression are met.
+#' @param anonymise_counts Boolean (default = `FALSE`) indicating whether to anonymise counts in the output table. If `TRUE`, counts less than 10 are suppressed and otherwise rounded to the nearest multiple of 5.
+#' @param use_model_data_only Boolean (default = `FALSE`) indicating whether to use only the subset of data that was used as part of the multivariable model, or set to `TRUE` to use the full set of data provided to the multivariable model. Note, any records containing missing values for any of the outcome or predictor variables are automatically excluded from the multivariable model by `stats::glm`, so the overall number of records used in multivariable models can be much lower than the total number of records supplied to the function. Set to `TRUE` to increase comparability between the univariable and multivariable models, set to `FALSE` to gain a more holistic view of the invididual relationships between predictors and outcome.
 #'
 #' @returns
 #' The returned object depends on the `output` parameter:
-#' * If `output = 'tibble'`, the function returns an object of class "tbl_df", "tbl" and "data.frame".
-#' * If `output = 'gt'`, the function returns an object of class "gt_tbl" and "list"
+#' - If `output = 'tibble'`, the function returns an object of class "tbl_df", "tbl", and "data.frame".
+#' - If `output = 'gt'`, the function returns an object of class "gt_tbl" and "list".
+#'
 #' @export
 #'
 #' @examples
@@ -139,63 +159,84 @@ plot_or <- function(glm_model_results,
 #'
 #' # Produce the Odds Ratio table as a gt object
 #' table_or(lr, output = 'gt')
-table_or <- function(glm_model_results,
-                     conf_level = 0.95,
-                     output = 'tibble',
-                     confint_fast_estimate = FALSE) {
-
-
+table_or <- function(
+  glm_model_results,
+  conf_level = 0.95,
+  output = c("tibble", "gt"),
+  output_type = c("multivariable", "uni_and_multi"),
+  confint_fast_estimate = FALSE,
+  assumption_checks = TRUE,
+  anonymise_counts = FALSE,
+  use_model_data_only = TRUE
+) {
   # data and input checks ----
   # check the model is logistic regression
   valid_glm_model <- validate_glm_model(glm_model_results)
 
-  # check logistic regression assumptions
-  valid_assumptions <- check_assumptions(glm = glm_model_results, details = FALSE)
+  # check logistic regression assumptions if the user requested it
+  if (assumption_checks) {
+    valid_assumptions <- check_assumptions(
+      glm = glm_model_results,
+      details = FALSE,
+      confint_fast_estimate = confint_fast_estimate
+    )
+
+    # recommend to the user to use `check_or` for more feedback if at least one
+    # test fails
+    suggest_check_or(
+      # pass in the name of the model
+      glm_name = deparse(substitute(glm_model_results)),
+      valid_assumptions = valid_assumptions,
+      assumption_checks = assumption_checks
+    )
+  }
 
   # limit conf_level to between 0.001 and 0.999
   conf_level <- validate_conf_level_input(conf_level)
 
-  # limit output to acceptable types and raise an error if not
+  # limit to acceptable outputs and raise an error if not
+  output <- match.arg(output)
   output_valid <- validate_output_table_input(output)
 
+  # limit to acceptable output types and raise an error if not
+  output_type <- match.arg(output_type)
+  output_type_valid <- validate_output_table_type_input(output_type)
+
   # main ----
-  # get summary of rows and estimate OR
-  df <- get_summary_table(
-    glm_model_results = glm_model_results,
-    conf_level = conf_level,
-    confint_fast_estimate = confint_fast_estimate
-  )
-
-  # get the outcome variable
-  str_outcome <- get_outcome_variable_name(model = glm_model_results)
-
-  # prepare for output
-  df <-
-    df |>
-    # remove variables which aren't necessary for table views
-    dplyr::select(!dplyr::any_of(c(
-      'term', 'rows_scale', 'label_or', 'group', 'p_label'
-    ))) |>
-    # work out the rate of 'outcome'
-    dplyr::mutate(outcome_rate = .data$outcome / .data$rows) |>
-    dplyr::relocate('outcome_rate', .after = 'outcome')
-
-  # decide what object to return
+  # decide whether to report multivariable or a combined view
   obj_return <-
-    switch(output,
-      # output a tibble
-      'tibble' = {df},
+    switch(
+      output_type,
+      # produce a multivariable summary
+      "multivariable" = {
+        prepare_multivariable_table_object(
+          glm_model_results,
+          conf_level = conf_level,
+          output = output,
+          confint_fast_estimate = confint_fast_estimate,
+          assumption_checks = assumption_checks,
+          anonymise_counts = anonymise_counts
+        )
+      },
 
-      # output a gt-formatted table
-      'gt' = {
-        df |>
-          dplyr::group_by(.data$label) |>
-          output_gt(conf_level = conf_level, title = str_outcome)
-        }
+      # produce a combined summary
+      "uni_and_multi" = {
+        prepare_combined_table_object(
+          glm_model_results,
+          conf_level = conf_level,
+          output = output,
+          confint_fast_estimate = confint_fast_estimate,
+          assumption_checks = assumption_checks,
+          anonymise_counts = anonymise_counts,
+          use_model_data_only = use_model_data_only
+        )
+      }
     )
 
+  # return the result
   return(obj_return)
 }
+
 
 #' Check OR
 #'
@@ -228,10 +269,11 @@ table_or <- function(glm_model_results,
 #'
 #' # Check the model for logistic regression assumption violations
 #' check_or(lr)
-check_or <- function(glm_model_results,
-                     confint_fast_estimate = FALSE,
-                     details = TRUE) {
-
+check_or <- function(
+  glm_model_results,
+  confint_fast_estimate = FALSE,
+  details = TRUE
+) {
   # set heading
   cli::cli_h1("Assumption checks")
 
@@ -239,7 +281,7 @@ check_or <- function(glm_model_results,
   # NB, detailed feedback is handled by each of the test functions
   test_results <- check_assumptions(
     glm = glm_model_results,
-    #confint_fast_estimate = confint_fast_estimate,
+    confint_fast_estimate = confint_fast_estimate,
     details = details
   )
 
@@ -264,12 +306,12 @@ check_or <- function(glm_model_results,
   # no multicollinearity
   if (test_results$assume_independent) {
     cli::cli_alert_success(
-      "The predictor variables are not highly correlated with each other",
+      "Predictor variables are not highly correlated with each other",
       wrap = TRUE
     )
   } else {
     cli::cli_alert_danger(
-      "The predictor variables may be correlated",
+      "Predictor variables may be correlated",
       wrap = TRUE
     )
   }
@@ -295,7 +337,21 @@ check_or <- function(glm_model_results,
     )
   } else {
     cli::cli_alert_danger(
-      "The sample size may not be large enough"
+      "The sample size may not be large enough",
+      wrap = TRUE
+    )
+  }
+
+  # linear relationship with continuous variables and log-odds of outcome
+  if (test_results$assume_linearity) {
+    cli::cli_alert_success(
+      "Continuous variables either have a linear relationship with the log-odds of the outcome or are absent",
+      wrap = TRUE
+    )
+  } else {
+    cli::cli_alert_danger(
+      "Signs of non-linear relationship detected",
+      wrap = TRUE
     )
   }
 
@@ -303,23 +359,45 @@ check_or <- function(glm_model_results,
   cli::cli_par()
   cli::cli_end()
   cli::cli_par()
-  cli::cli_text("Your model was checked for logistic regression assumptions in the following areas:")
+  cli::cli_text(
+    "Your model was checked for logistic regression assumptions in the following areas:"
+  )
   cli::cli_end()
   cli::cli_par()
   cli::cli_text("{.emph Binary outcome:}")
-  cli::cli_text("The outcome variable was checked for containing precisely two levels.")
+  cli::cli_text(
+    "The outcome variable was checked for containing precisely two levels."
+  )
   cli::cli_end()
   cli::cli_par()
   cli::cli_text("{.emph Multicollinearity:}")
-  cli::cli_text("The {.fn vif} function from the {.pkg car} package was used to check for highly correlated predictor variables.")
+  cli::cli_text(
+    "The {.fn vif} function from the {.pkg car} package was used to check for highly correlated predictor variables."
+  )
   cli::cli_end()
   cli::cli_par()
   cli::cli_text("{.emph Separation:}")
-  cli::cli_text("The {.fn detectseparation} function from the {.pkg detectseparation} package was used to check for complete or quasi-complete separation in the data.")
+  if (confint_fast_estimate) {
+    cli::cli_text(
+      "Numeric predictors were checked for overlapping ranges across both outcomes and categorical predictors were checked for each level appearing at least once in both outcomes."
+    )
+  } else {
+    cli::cli_text(
+      "The {.fn detectseparation} function from the {.pkg detectseparation} package was used to check for complete or quasi-complete separation in the data."
+    )
+  }
   cli::cli_end()
   cli::cli_par()
   cli::cli_text("{.emph Sample size:}")
-  cli::cli_text("A rule of thumb was applied, requiring at least 10 events per predictor variable and at least 10 events per level of categorical variables to ensure sufficient data for reliable estimates.")
+  cli::cli_text(
+    "A rule of thumb was applied, requiring at least 10 events per predictor variable and at least 10 events per level of categorical variables to ensure sufficient data for reliable estimates."
+  )
+  cli::cli_end()
+  cli::cli_par()
+  cli::cli_text("{.emph Linearity:}")
+  cli::cli_text(
+    "A likelihood ratio test was conducted to assess improvements in model fit compared to a model using Box-Tidwell power transformations on continuous predictors. Any observed improvement likely indicates non-linear relationships between the continuous predictors and the log-odds of the outcome."
+  )
   cli::cli_end()
   cli::cli_par()
   if (all(unlist(test_results))) {
@@ -333,7 +411,6 @@ check_or <- function(glm_model_results,
       wrap = TRUE
     )
   }
-
 }
 
 # Internal functions -----------------------------------------------------------
@@ -359,7 +436,10 @@ count_rows_by_variable <- function(df, var_name, outcome_name) {
   outcome = base::as.symbol(outcome_name)
 
   # determine the outcome of interest
-  outcome_num <- df[[outcome_name]] |> stats::na.omit() |> as.numeric() |> max(na.rm = TRUE)
+  outcome_num <- df[[outcome_name]] |>
+    stats::na.omit() |>
+    as.numeric() |>
+    max(na.rm = TRUE)
   outcome_txt <- levels(df[[outcome_name]])[outcome_num]
 
   var_temp <- df |>
@@ -371,23 +451,37 @@ count_rows_by_variable <- function(df, var_name, outcome_name) {
     if (is.numeric(var_temp)) {
       df |>
         dplyr::filter(!is.na(var_name)) |>
-        dplyr::summarise(rows = dplyr::n(), outcome = sum({{outcome}} == outcome_txt)) |>
-        dplyr::mutate(group = var_name,
-                      level = var_name,
-                      term = var_name) |>
+        dplyr::summarise(
+          rows = dplyr::n(),
+          outcome = sum({{ outcome }} == outcome_txt)
+        ) |>
+        dplyr::mutate(group = var_name, level = var_name, term = var_name) |>
         dplyr::select(dplyr::any_of(c(
-          'term', 'group', 'level', 'rows', 'outcome'
+          'term',
+          'group',
+          'level',
+          'rows',
+          'outcome'
         )))
     } else {
       df |>
-        dplyr::mutate(outcome = sum({{outcome}} == outcome_txt), .by = {{var}}) |>
+        dplyr::mutate(
+          outcome = sum({{ outcome }} == outcome_txt),
+          .by = {{ var }}
+        ) |>
         #dplyr::summarise(rows = dplyr::n(), .by = c({{var}}, {{outcome}})) |>
-        dplyr::summarise(rows = dplyr::n(), .by = c({{var}}, 'outcome')) |>
-        dplyr::rename(level = {{var}}) |>
-        dplyr::mutate(group = var_name,
-                      term = base::paste0(.data$group, .data$level)) |>
+        dplyr::summarise(rows = dplyr::n(), .by = c({{ var }}, 'outcome')) |>
+        dplyr::rename(level = {{ var }}) |>
+        dplyr::mutate(
+          group = var_name,
+          term = base::paste0(.data$group, .data$level)
+        ) |>
         dplyr::select(dplyr::any_of(c(
-          'term', 'group', 'level', 'rows', 'outcome'
+          'term',
+          'group',
+          'level',
+          'rows',
+          'outcome'
         )))
     }
 
@@ -425,18 +519,20 @@ summarise_rows_per_variable_in_model <- function(model_results) {
   # count the number of rows used for each variable and level
   df_rows <-
     model_vars |>
-    purrr::map_dfr(\(.x) count_rows_by_variable(
-      df = model_data,
-      var_name = .x,
-      outcome_name = model_outcome
-    )) |>
+    purrr::map_dfr(\(.x) {
+      count_rows_by_variable(
+        df = model_data,
+        var_name = .x,
+        outcome_name = model_outcome
+      )
+    }) |>
     # rescale rows (will be used to set the size of the dot in the plot)
     dplyr::mutate(
       rows_scale = dplyr::case_when(
-          .data$class == 'numeric' ~ 1,
-          .default = .data$rows |>
-            scales::rescale(to = c(1, 5))
-        )
+        .data$class == 'numeric' ~ 1,
+        .default = .data$rows |>
+          scales::rescale(to = c(1, 5))
+      )
     )
 
   # combine the two data
@@ -463,7 +559,6 @@ summarise_rows_per_variable_in_model <- function(model_results) {
 #' @returns Tibble summary of variables and levels used in the model
 #' @noRd
 get_model_variables_and_levels <- function(model_results) {
-
   # 1. get a list of all model variables
   model_vars <-
     model_results |>
@@ -471,7 +566,10 @@ get_model_variables_and_levels <- function(model_results) {
     purrr::pluck(3) |>
     base::all.vars() |>
     tibble::enframe() |>
-    dplyr::select(-dplyr::any_of('name'), dplyr::any_of(c('variable' = 'value')))
+    dplyr::select(
+      -dplyr::any_of('name'),
+      dplyr::any_of(c('variable' = 'value'))
+    )
 
   # 2. for all categorical variables, list out the levels
   model_var_levels <-
@@ -479,14 +577,17 @@ get_model_variables_and_levels <- function(model_results) {
     tibble::enframe() |>
     tidyr::unnest(cols = dplyr::any_of('value')) |>
     dplyr::rename(dplyr::any_of(c(
-      'variable' = 1, 'level' = 2
+      'variable' = 1,
+      'level' = 2
     )))
 
   # 3. combine the two sets
   df <-
     model_vars |>
-    dplyr::left_join(y = model_var_levels,
-                     by = dplyr::join_by('variable' == 'variable')) |>
+    dplyr::left_join(
+      y = model_var_levels,
+      by = dplyr::join_by('variable' == 'variable')
+    ) |>
     # create the 'term' outputted by {broom}
     dplyr::mutate(term = glue::glue("{variable}{level}", .na = "")) |>
     dplyr::relocate(dplyr::any_of('term'), .before = dplyr::any_of('variable'))
@@ -504,6 +605,9 @@ get_model_variables_and_levels <- function(model_results) {
 prepare_df_for_plotting <- function(df) {
   df <- df |>
     dplyr::mutate(
+      # work out the rate of the outcome
+      outcome_rate = .data$outcome / .data$rows,
+
       # flag records which do not cross the line of no effect
       significance = dplyr::case_when(
         base::is.na(estimate) ~ 'Comparator',
@@ -535,7 +639,9 @@ prepare_df_for_plotting <- function(df) {
           '{p_label})' # probability
         )
       )
-    )
+    ) |>
+    # position outcome rate following outcome
+    dplyr::relocate("outcome_rate", .after = "outcome")
 }
 
 #' Plot the Odds Ratio
@@ -586,7 +692,8 @@ plot_odds_ratio <- function(df, model, conf_level) {
     ) +
     ggplot2::geom_errorbar(
       # remove any confidence estimates with NA values
-      data = df |> dplyr::filter(!is.na(.data$conf.high), !is.na(.data$conf.low)),
+      data = df |>
+        dplyr::filter(!is.na(.data$conf.high), !is.na(.data$conf.low)),
       ggplot2::aes(xmax = .data$conf.high, xmin = .data$conf.low),
       width = 1 / 5,
       na.rm = TRUE
@@ -613,7 +720,9 @@ plot_odds_ratio <- function(df, model, conf_level) {
     ) +
     ggplot2::labs(
       title = glue::glue('{model_outcome}'),
-      subtitle = glue::glue('Odds Ratio (OR) plot with {str_conf_level} Confidence Interval (CI)'),
+      subtitle = glue::glue(
+        'Odds Ratio (OR) plot with {str_conf_level} Confidence Interval (CI)'
+      ),
       x = glue::glue('Odds ratio ({str_conf_level} CI, log scale)')
     ) +
     ggplot2::scale_colour_manual(
@@ -637,16 +746,18 @@ plot_odds_ratio <- function(df, model, conf_level) {
 #' @return Character vectors of labels for both group and level
 #' @noRd
 label_groups <- function(group, level) {
-  dplyr::case_when(is.na(dplyr::lag(group)) ~ group,
-                   group != dplyr::lag(group) ~ group,
-                   .default = '')
+  dplyr::case_when(
+    is.na(dplyr::lag(group)) ~ group,
+    group != dplyr::lag(group) ~ group,
+    .default = ''
+  )
 }
 
 #' Use Variable Labels
 #'
 #' Where variables have been given a label attribute then the label is used in the plot
 #'
-#' @param df Tibble of data expanded with variables to aid plotting - as outputted from [prepare_df_for_plotting()]
+#' @param df Tibble of data expanded with variables to aid plotting - as outputted from `prepare_df_for_plotting()`
 #' @param lr Results from a Generalised Linear Model (GLM) binomial model, as produced by [stats::glm()].
 #'
 #' @return Tibble of data with group labels used where available
@@ -689,7 +800,78 @@ use_var_labels <- function(df, lr) {
     dplyr::arrange('label', 'level')
 
   return(df_return)
+}
 
+#' Suggest the Use of check_or()
+#'
+#' @description
+#' This function suggests using the check_or() function for more detailed
+#' feedback if any of the assumption tests fail.
+#'
+#' @details
+#' The function outputs a console message that, when any assumption checks
+#' fail, recommends that the user run the check_or() function with the details
+#' argument set to TRUE. This provides additional insights into the cause of
+#' the failed tests.
+#'
+#' Using the {cli} package, the console message includes a special .run
+#' argument to construct a valid function call using the name of the logistic
+#' regression model, which is passed in via a parameter. This allows
+#' the check_or() function to be executed from the console with a single click.
+#'
+#' @param glm_name String: The name of the GLM model passed to the package.
+#' @param valid_assumptions List: A named list of assumptions and outcomes from the tests of the assumptions, represented as boolean values.
+#' @param assumption_checks Boolean: Indicates whether the user requested their model to be tested for logistic regression assumptions.
+#'
+#' @returns Nothing; this function is used solely to output console feedback to the user.
+#' @noRd
+suggest_check_or <- function(
+  glm_name,
+  valid_assumptions,
+  assumption_checks
+) {
+  # have all assumption checks passed?
+  all_passed <- all(unlist(valid_assumptions))
+
+  # only progress if at least one test failed and the user requested tests of logistic regression assumptions
+  if (!all_passed & assumption_checks) {
+    # suggest the user find out more from `check_or()`
+    cli::cli_alert_info(
+      "One or more assumptions for logistic regression have failed. To gain further insights, consider calling the {.fn plotor::check_or} function. For example, you can run {.run plotor::check_or({glm_name}, details = TRUE)}.",
+      wrap = TRUE
+    )
+  }
+}
+
+#' Anonymise Count Values
+#'
+#' @description
+#' Anonymises counts within a supplied numeric vector by applying specific formatting rules.
+#'
+#' @details
+#' This function provides a vectorised approach to data anonymisation that:
+#' - Suppresses counts below 10 by replacing them with the string "<10".
+#' - Rounds counts of 10 or more to the nearest multiple of 5.
+#' - Formats counts using `scales::label_number_auto()` to include thousands separators, which respects the locale settings for choice of the big mark.
+#'
+#' The function returns a vector of strings representing the anonymised counts.
+#'
+#' @param var A numeric vector containing count data.
+#'
+#' @return A character vector of anonymised counts.
+#' @noRd
+anonymise_count_values <- function(var) {
+  # Ensure `var` is a numeric vector
+  var <- as.numeric(var)
+
+  # Suppress counts below 10 and round the rest to the nearest multiple of 5
+  vec_return <- dplyr::case_when(
+    var < 10 ~ "<10",
+    TRUE ~ scales::label_number_auto()(round(var / 5) * 5) # Round to nearest multiple of 5 and format the number
+  )
+
+  # Return the result
+  return(vec_return)
 }
 
 ## validation funcs -----
@@ -727,12 +909,12 @@ validate_conf_level_input <- function(conf_level) {
 
   # validate conf_level
   conf_level_new <- dplyr::case_when(
-
     # parse if given an integer version, e.g. 95 instead of 0.95
     conf_level > 50 & conf_level < 100 ~ conf_level / 100,
 
     # if otherwise outside limits then set to nearest limit
-    conf_level < ci_min | conf_level > ci_max ~ min(ci_max, max(ci_min, conf_level)),
+    conf_level < ci_min | conf_level > ci_max ~
+      min(ci_max, max(ci_min, conf_level)),
 
     # if all checks pass then return the input
     .default = conf_level
@@ -763,7 +945,6 @@ validate_conf_level_input <- function(conf_level) {
 #' @returns boolean (TRUE = logistic regression, FALSE = other model)
 #' @noRd
 validate_glm_model <- function(glm_model) {
-
   # find the response to the validation
   response <- (
     class(glm_model)[1] == 'glm' & # must be a glm class object
@@ -794,7 +975,6 @@ validate_glm_model <- function(glm_model) {
 #' @returns Boolean indicating whether the 'output' parameter is valid
 #' @noRd
 validate_output_table_input <- function(output) {
-
   # specify accepted output types
   accepted_outputs <- c('tibble', 'gt')
 
@@ -817,6 +997,40 @@ validate_output_table_input <- function(output) {
   return(result)
 }
 
+#' Validate the 'output_type' parameter
+#'
+#' Check the requested 'output_type' matches one of the accepted 'output_type'
+#' values
+#'
+#' @param output_type String description of the output type. Default = "multivariable". Options include "multivariable" and "uni_and_multi"
+#'
+#' @returns Boolean indicating whether the "output_type" parameter is valid
+#' @noRd
+validate_output_table_type_input <- function(output_type) {
+  # specify accepted types
+  accepted_types <- c("multivariable", "uni_and_multi")
+
+  # do some basic input cleaning
+  output_type <- output_type |> trimws() |> tolower()
+
+  # record the result of the check
+  result <- output_type %in% accepted_types
+
+  # message the user if any issues
+  if (!result) {
+    cli::cli_abort(
+      message = c(
+        "{.arg output_type} must be one of {.or {.val {accepted_types}}}.",
+        "You've requested an output_type of {.val {output_type}}"
+      )
+    )
+  }
+
+  # return the result of the validation
+  return(result)
+}
+
+
 ## output tables ----
 
 #' Get a table summarising the model results
@@ -827,19 +1041,20 @@ validate_output_table_input <- function(output) {
 #'
 #' @param glm_model_results Results from a binomial Generalised Linear Model (GLM), as produced by [stats::glm()].
 #' @param conf_level Numeric between 0.001 and 0.999 (default = 0.95). The confidence level to use when setting the confidence interval, most commonly will be 0.95 or 0.99 but can be set otherwise.
+#' @param confint_fast_estimate Boolean (default = `FALSE`) indicating whether to use a faster estimate of the confidence interval. Note: this assumes normally distributed data, which may not be suitable for your data.
 #'
 #' @returns Tibble providing a summary of the logistic regression model.
 #' @noRd
-get_summary_table <- function(glm_model_results,
-                              conf_level,
-                              confint_fast_estimate) {
-
+get_summary_table <- function(
+  glm_model_results,
+  conf_level = 0.95,
+  confint_fast_estimate = FALSE
+) {
   # get the data from the model object
   df <- summarise_rows_per_variable_in_model(model_results = glm_model_results)
 
   # get odds ratio and confidence intervals
   if (confint_fast_estimate == TRUE) {
-
     # use a fast approximation for confidence intervals
     model_or <-
       glm_model_results |>
@@ -854,15 +1069,10 @@ get_summary_table <- function(glm_model_results,
           dplyr::rename("conf.low" = 2, "conf.high" = 3),
         by = dplyr::join_by("term" == "term")
       )
-
   } else {
-
     # use the correct method to estimate the confidence interval
     model_or <- glm_model_results |>
-      broom::tidy(exponentiate = T,
-                  conf.int = T,
-                  conf.level = conf_level)
-
+      broom::tidy(exponentiate = T, conf.int = T, conf.level = conf_level)
   }
 
   # add the odds ratio and CIs to the summary dataframe
@@ -889,7 +1099,6 @@ get_summary_table <- function(glm_model_results,
 #' @returns {gt}
 #' @noRd
 output_gt <- function(df, conf_level, title = "Odds Ratio Summary Table") {
-
   # get the outcome
 
   # produce the gt table
@@ -930,7 +1139,12 @@ output_gt <- function(df, conf_level, title = "Odds Ratio Summary Table") {
       drop_trailing_zeros = TRUE
     ) |>
     gt::fmt_number(
-      columns = c(.data$estimate, .data$std.error, .data$conf.low, .data$conf.high),
+      columns = c(
+        .data$estimate,
+        .data$std.error,
+        .data$conf.low,
+        .data$conf.high
+      ),
       n_sigfig = 4
     ) |>
     gt::fmt_scientific(
@@ -944,7 +1158,12 @@ output_gt <- function(df, conf_level, title = "Odds Ratio Summary Table") {
     ) |>
     gt::tab_spanner(
       label = 'Odds Ratio (OR)',
-      columns = c(.data$estimate, .data$std.error, .data$statistic, .data$p.value),
+      columns = c(
+        .data$estimate,
+        .data$std.error,
+        .data$statistic,
+        .data$p.value
+      ),
       id = 'or'
     ) |>
     gt::tab_spanner(
@@ -955,40 +1174,50 @@ output_gt <- function(df, conf_level, title = "Odds Ratio Summary Table") {
     # reference value rows
     gt::sub_missing() |>
     # hide columns that don't need displaying
-    gt::cols_hide(columns = c(
-      .data$comparator,
-      .data$statistic,
-      .data$plot_ci_l,
-      .data$plot_ci_u
-    )) |>
+    gt::cols_hide(
+      columns = c(
+        .data$comparator,
+        .data$statistic,
+        .data$plot_ci_l,
+        .data$plot_ci_u
+      )
+    ) |>
     # add titles
     gt::tab_header(
       title = gt::md(glue::glue("{title}")),
-      subtitle = gt::md(glue::glue("Odds Ratio summary table with {conf_level * 100}% Confidence Interval"))
+      subtitle = gt::md(glue::glue(
+        "Odds Ratio summary table with {conf_level * 100}% Confidence Interval"
+      ))
     ) |>
     # add footnotes
     gt::tab_footnote(
       locations = gt::cells_column_spanners('Characteristic'),
-      footnote = gt::md("**Characteristics** are the explanatory variables in the logistic regression analysis. For categorical variables the first characteristic is designated as a reference against which the others are compared. For numeric variables the results indicate a change per single unit increase.\n\n
+      footnote = gt::md(
+        "**Characteristics** are the explanatory variables in the logistic regression analysis. For categorical variables the first characteristic is designated as a reference against which the others are compared. For numeric variables the results indicate a change per single unit increase.\n\n
 *Level* - the name or the description of the explanatory variable.\n\n
 *N* - the number of observations examined.\n\n
 *n* - the number of observations resulting in the outcome of interest.\n\n
 *Rate* - the proportion of observations resulting in the outcome of interest (n / N).\n\n
-*Class* - description of the data type.")
+*Class* - description of the data type."
+      )
     ) |>
     gt::tab_footnote(
       locations = gt::cells_column_spanners('or'),
-      footnote = gt::md("**Odds Ratios** estimate the relative *odds* of an outcome with reference to the *Characteristic*. For categorical data the first level is the reference against which the odds of other levels are compared. Numerical characteristics indicate the change in *OR* for each additional increase of one unit in the variable.\n\n
+      footnote = gt::md(
+        "**Odds Ratios** estimate the relative *odds* of an outcome with reference to the *Characteristic*. For categorical data the first level is the reference against which the odds of other levels are compared. Numerical characteristics indicate the change in *OR* for each additional increase of one unit in the variable.\n\n
 *OR* - The Odds Ratio point estimate - values below 1 indicate an inverse relationship whereas values above 1 indicate a positive relationship. Values shown to 4 significant figures.\n\n
 *SE* - Standard Error of the point estimate. Values shown to 4 significant figures.\n\n
-*p* - The p-value estimate based on the residual Chi-squared statistic.")
+*p* - The p-value estimate based on the residual Chi-squared statistic."
+      )
     ) |>
     gt::tab_footnote(
       locations = gt::cells_column_spanners('ci'),
-      footnote = gt::md(glue::glue("**Confidence Interval** - the range of values likely to contain the *OR* in {conf_level * 100}% of cases if this study were to be repeated multiple times. If the *CI* touches or crosses the value 1 then it is unlikely the *Characteristic* is significantly associated with the outcome.\n\n
+      footnote = gt::md(glue::glue(
+        "**Confidence Interval** - the range of values likely to contain the *OR* in {conf_level * 100}% of cases if this study were to be repeated multiple times. If the *CI* touches or crosses the value 1 then it is unlikely the *Characteristic* is significantly associated with the outcome.\n\n
 *Lower* & *Upper* - The range of values comprising the *CI*, shown to 4 significant figures.\n\n
 *Significance* - The statistical significance indicated by the *CI*, *Significant* where the *CI* does not touch or cross the value 1.
-      "))
+      "
+      ))
     ) |>
     # add an OR plot to visualise the results
     # gtExtras::gt_plt_conf_int(
@@ -1007,7 +1236,239 @@ output_gt <- function(df, conf_level, title = "Odds Ratio Summary Table") {
       columns = .data$plot_or,
       align = 'center'
     )
+}
 
+#' Output tibble as `gt`
+#'
+#' Outputs a publication-quality summary OR table with {gt} formatting.
+#'
+#' @param df Tibble of summary data produced by `table_or()`
+#' @param conf_level Numeric between 0.001 and 0.999 (default = 0.95). The confidence level to use when setting the confidence interval, most commonly will be 0.95 or 0.99 but can be set otherwise.
+#' @param use_model_data_only Boolean (default = `FALSE`) indicating whether to use only the subset of data that was used as part of the multivariable model, or set to `TRUE` to use the full set of data provided to the multivariable model. Note, any records containing missing values for any of the outcome or predictor variables are automatically excluded from the multivariable model by {stats::glm}, so the overall number of records used in multivariable models can be much lower than the total number of records supplied to the function. Set to `TRUE` to increase comparability between the univariable and multivariable models, set to `FALSE` to gain a more holistic view of the invididual relationships between predictors and outcome.
+#'
+#' @returns {gt}
+#' @noRd
+output_gt_combined <- function(
+  df,
+  conf_level = 0.95,
+  title = "Combined Odds Ratio Summary Table",
+  use_model_data_only = FALSE
+) {
+  # process the combined summary table
+  df <-
+    df |>
+    # prepare OR and p-value columns ready for display
+    dplyr::mutate(
+      # univariate
+      uv_p_display = scales::label_pvalue(add_p = FALSE)(.data$uv_p.value),
+      uv_or = scales::label_number(accuracy = 0.001)(.data$uv_estimate),
+      uv_ci_l = scales::label_number(accuracy = 0.001)(.data$uv_conf.low),
+      uv_ci_u = scales::label_number(accuracy = 0.001)(.data$uv_conf.high),
+      # OR followed by confidence interval
+      uv_or_display = dplyr::case_when(
+        is.na(uv_estimate) ~ NA,
+        .default = glue::glue("{uv_or}<br>({uv_ci_l}-{uv_ci_u})")
+      ),
+      uv_sig_display = .data$uv_significance == "Significant",
+      # multivariate
+      mv_p_display = scales::label_pvalue(add_p = FALSE)(.data$mv_p.value),
+      mv_or = scales::label_number(accuracy = 0.001)(.data$mv_estimate),
+      mv_ci_l = scales::label_number(accuracy = 0.001)(.data$mv_conf.low),
+      mv_ci_u = scales::label_number(accuracy = 0.001)(.data$mv_conf.high),
+      # OR followed by confidence interval
+      # mv_or_display = dplyr::case_when(
+      #   is.na("mv_estimate") ~ NA,
+      #   .default = glue::glue("{mv_or}<br>({mv_ci_l}-{mv_ci_u})")
+      # ),
+      mv_or_display = dplyr::if_else(
+        condition = is.na(.data$mv_estimate),
+        true = NA,
+        false = glue::glue("{mv_or}<br>({mv_ci_l}-{mv_ci_u})")
+      ),
+      mv_sig_display = .data$mv_significance == "Significant"
+    ) |>
+    # relocate the new columns
+    dplyr::relocate(
+      c("uv_p_display", "uv_or_display"),
+      .after = "uv_estimate"
+    ) |>
+    # remove unecessary columns
+    dplyr::select(
+      !c(
+        c("group", "term"),
+        dplyr::ends_with(c(
+          "_label_or",
+          "_rows_scale",
+          "_estimate",
+          "_std.error",
+          "_statistic",
+          "_p.value",
+          "_conf.low",
+          "_conf.high",
+          "_significance",
+          "_comparator",
+          "_p_label",
+          "_ci_l",
+          "_ci_u",
+          "_or"
+        ))
+      )
+    )
+
+  # produce the gt table
+  tab <-
+    df |>
+    dplyr::group_by(.data$label) |>
+    gt::gt(row_group_as_column = TRUE) |>
+    # spanners ----
+    gt::tab_spanner(
+      columns = gt::any_of(c(
+        "label",
+        "level",
+        "class",
+        "rows",
+        "outcome",
+        "outcome_rate"
+      )),
+      label = "Characteristic"
+    ) |>
+    gt::tab_spanner(
+      columns = gt::starts_with("uv_"),
+      label = "Univariable",
+      gather = TRUE
+    ) |>
+    gt::tab_spanner(
+      columns = gt::starts_with("mv_"),
+      label = "Multivariable",
+      gather = TRUE
+    ) |>
+    # column formats
+    gt::fmt_integer(
+      columns = c(
+        gt::contains(match = "_rows"),
+        gt::contains(match = "_outcome")
+      ),
+      use_seps = TRUE
+    ) |>
+    gt::fmt_percent(
+      columns = gt::ends_with(match = "outcome_rate"),
+      decimals = 1
+    ) |>
+    gt::cols_align(
+      columns = gt::ends_with("_p_display"),
+      align = "right"
+    ) |>
+    gt::fmt_markdown(
+      columns = gt::ends_with("_or_display"),
+      md_engine = "markdown"
+    ) |>
+    # label the columns
+    gt::cols_label(
+      gt::any_of(c("level")) ~ "Level",
+      gt::any_of(c("class")) ~ "Class",
+      gt::ends_with("rows") ~ "N",
+      gt::ends_with("outcome") ~ "n",
+      gt::ends_with("outcome_rate") ~ "Rate",
+      gt::ends_with("or_display") ~
+        gt::md("Odds Ratio\n\n(Confidence Interval)"),
+      gt::ends_with("p_display") ~ "p-value"
+    ) |>
+    # reference value rows
+    gt::sub_missing() |>
+    # format statistically significant findings
+    gt::tab_style(
+      locations = gt::cells_body(
+        columns = gt::any_of(c("uv_or_display", "uv_p_display")),
+        rows = .data$uv_sig_display
+      ),
+      style = gt::cell_text(weight = "bold")
+    ) |>
+    gt::tab_style(
+      locations = gt::cells_body(
+        columns = gt::any_of(c("mv_or_display", "mv_p_display")),
+        rows = .data$mv_sig_display
+      ),
+      style = gt::cell_text(weight = "bold")
+    ) |>
+    # hide columns that don't need displaying
+    gt::cols_hide(
+      columns = c(
+        gt::contains(match = "_sig_display")
+      )
+    ) |>
+    # add titles
+    gt::tab_header(
+      title = gt::md(glue::glue("{title}")),
+      subtitle = gt::md(glue::glue(
+        "Combined Univariable and Multivariable Odds Ratio Summary Tables with {conf_level * 100}% Confidence Intervals"
+      ))
+    ) |>
+    # set widths
+    gt::cols_width(
+      "label" ~ gt::pct(15),
+      "level" ~ gt::pct(5),
+      "class" ~ gt::pct(4)
+    )
+
+  # write some introductions to each table section
+  intro_characteristic <- "**Characteristics** are the explanatory variables in the logistic regression analysis. For categorical variables the first characteristic is designated as a reference against which the others are compared. For numeric variables the results indicate a change per single unit increase.\n\n
+  ***Level*** - the name or the description of the explanatory variable.\n\n
+  ***Class*** - description of the data type."
+  intro_uv_mv <- "**Univariable** logistic regression examines the relationship between a single predictor and an outcome, providing a simple, unadjusted assessment of how that individual variable might influence the probability of an event occurring.\n\n
+  **Multivariable** logistic regression simultaneously analyses multiple predictors, controlling for potential confounding factors to provide an adjusted effect of each variable while accounting for the influence of other variables in the model."
+  intro_or <- glue::glue(
+    "***p-value*** - The p-value estimate based on the residual Chi-squared statistic.\n\n
+  ***Odds Ratios*** estimate the relative *odds* of an outcome with reference to the *Characteristic*. For categorical data the first level is the reference against which the odds of other levels are compared. Numerical characteristics indicate the change in *OR* for each additional increase of one unit in the variable.\n\n
+  ***Confidence Interval*** - the range of values likely to contain the *Odds Ratio* in {conf_level * 100}% of cases if this study were to be repeated multiple times. If the *CI* touches or crosses the value 1 then it is unlikely the *Characteristic* is significantly associated with the outcome."
+  )
+  intro_n <- "***N*** - the number of observations examined.\n\n
+  ***n*** - the number of observations resulting in the outcome of interest.\n\n
+  ***Rate*** - the proportion of observations resulting in the outcome of interest (n / N)."
+  # add footnotes conditionally
+  if (use_model_data_only) {
+    # 'N' & 'n' are part of 'Characteristics'
+    tab <-
+      tab |>
+      gt::tab_footnote(
+        locations = gt::cells_column_spanners('Characteristic'),
+        footnote = gt::md(glue::glue(
+          "{intro_characteristic}\n\n
+          {intro_n}"
+        ))
+      ) |>
+      gt::tab_footnote(
+        locations = gt::cells_column_spanners(
+          spanners = gt::any_of(c("Univariable", "Multivariable"))
+        ),
+        footnote = gt::md(glue::glue(
+          "{intro_uv_mv}\n\n
+          {intro_or}"
+        ))
+      )
+  } else {
+    # 'N' and 'n' are part of 'Univariable' and 'Multivariable'
+    tab <-
+      tab |>
+      gt::tab_footnote(
+        locations = gt::cells_column_spanners('Characteristic'),
+        footnote = gt::md(glue::glue(
+          "{intro_characteristic}"
+        ))
+      ) |>
+      gt::tab_footnote(
+        locations = gt::cells_column_spanners(
+          spanners = gt::any_of(c("Univariable", "Multivariable")),
+        ),
+        footnote = gt::md(glue::glue(
+          "{intro_uv_mv}\n\n
+          {intro_n}\n\n
+          {intro_or}"
+        ))
+      )
+  }
+
+  # return the table
+  return(tab)
 }
 
 
@@ -1020,7 +1481,6 @@ output_gt <- function(df, conf_level, title = "Odds Ratio Summary Table") {
 #' @returns String
 #' @noRd
 get_outcome_variable_name <- function(model, return_var_name = FALSE) {
-
   # get the name of the outcome variable from the model formula
   model_outcome_var <-
     model$formula[[2]] |>
@@ -1034,8 +1494,10 @@ get_outcome_variable_name <- function(model, return_var_name = FALSE) {
 
   # return either the label or variable name
   model_outcome <-
-    dplyr::coalesce(model_outcome_label,
-                    model_outcome_var |> base::as.character())
+    dplyr::coalesce(
+      model_outcome_label,
+      model_outcome_var |> base::as.character()
+    )
 
   # return the variable name if requested
   if (return_var_name) {
@@ -1043,9 +1505,419 @@ get_outcome_variable_name <- function(model, return_var_name = FALSE) {
   } else {
     return(model_outcome)
   }
-
 }
 
+
+#' Get a Summary Table of Univariable Analysis
+#'
+#' @description
+#' Performs univariable logistic regression for each predictor in a
+#' multivariable model, generating a summary table with odds ratios, confidence
+#' intervals and p-values.
+#'
+#' @details
+#' This function systematically:
+#' - Extracts predictors from a multivariable logistic regression model
+#' - Runs individual logistic regression models for each predictor
+#' - Calculates odds ratios, confidence intervals and statistical significance
+#'
+#' Key features:
+#' - Flexible confidence interval estimation
+#' - Option to use full or model-specific dataset
+#' - Comprehensive output for comparative analysis
+#'
+#' @param glm A binomial Generalised Linear Model (GLM) object from [stats::glm()].
+#' @param conf_level Numeric value between 0.001 and 0.999 (default = 0.95) specifying the confidence level for the confidence interval.
+#' @param confint_fast_estimate Boolean (default = `FALSE`) indicating whether to use a faster estimate of the confidence interval. Note: this assumes normally distributed data, which may not be suitable for your data.
+#' @param use_model_data_only Boolean (default = `FALSE`) indicating whether to use only the subset of data that was used as part of the multivariable model, or set to `TRUE` to use the full set of data provided to the multivariable model. Note, any records containing missing values for any of the outcome or predictor variables is automatically excluded from the multivariable model by {stats::glm}, so the overall number of records used in multivariable models can be much lower than the total number of records supplied to the function. Set to `TRUE` to increase comparability between the univariable and multivariable models, set to `FALSE` to gain a more holistic view of the invididual relationships between predictors and outcome.
+#'
+#' @returns Tibble providing a summary of the univariable logistic regression model.
+#'
+#' @examples
+#' # prepare the data
+#' df <-
+#'   # get the dataset
+#'   datasets::Titanic |>
+#'   # convert to a tibble
+#'   tibble::as_tibble() |>
+#'   # convert the aggregate counts to individual observations
+#'   tidyr::uncount(weights = n) |>
+#'   # convert categorical variables to factors
+#'   dplyr::mutate_if(
+#'     .predicate = is.character,
+#'     .funs = as.factor
+#'   )
+#'
+#' # create a model from the data
+#' model <-
+#'   stats::glm(
+#'     formula = Survived ~ Age + Class + Sex,
+#'     family = "binomial",
+#'     data = df
+#'   )
+#'
+#' # get a univariable summary from all the data
+#' plotor:::get_univariable_summary_table(
+#'   glm =  model,
+#'   confint_fast_estimate = TRUE
+#' )
+#' @noRd
+get_univariable_summary_table <- function(
+  glm,
+  conf_level = 0.95,
+  confint_fast_estimate = FALSE,
+  use_model_data_only = FALSE
+) {
+  # prepare the univariable data
+  if (use_model_data_only) {
+    # only use data that went into the model
+    var_data <- glm$model
+  } else {
+    # use all data given as part of the multivariable model
+    var_data <- glm$data
+  }
+
+  # get the outcome variable
+  var_outcome <- get_outcome_variable_name(model = glm, return_var_name = TRUE)
+
+  # get a list of the multivariable predictor variables
+  var_predictors <-
+    get_model_variables_and_levels(model_results = glm) |>
+    dplyr::pull(dplyr::any_of("variable")) |>
+    unique()
+
+  # iterate over each predictor and perform univariable analysis
+  df_return <-
+    purrr::map_dfr(
+      .x = var_predictors,
+      .f = \(.predictor) {
+        # get a formula
+        uni_formula <- stats::as.formula(
+          glue::glue("{var_outcome} ~ {.predictor}")
+        )
+
+        # get a model
+        uni_glm <-
+          stats::glm(
+            formula = uni_formula,
+            family = "binomial",
+            data = var_data
+          )
+
+        # summarise the model
+        df_summary <- get_summary_table(
+          glm_model_results = uni_glm,
+          conf_level = conf_level,
+          confint_fast_estimate = confint_fast_estimate
+        )
+
+        # return the result for collation by {purrr}
+        return(df_summary)
+      }
+    )
+  # return the result
+  return(df_return)
+}
+
+
+#' Get combined univariable and multivariable summaries
+#'
+#' @description
+#' Produces a combined summary of univariable and multivariable summaries.
+#'
+#' @details
+#' The function starts by getting separate univariable and multivariable summary tables. A combined view is created from variables common to both summaries and the remaining variables prefixed with either 'uv_' for univariable variables or 'mv_' for multivariable variables.
+#' These prefixed variables are then left-joined to the combined view to give a single tibble containing details for univariable and multivariable summaries.
+#'
+#' @param model A binomial Generalised Linear Model (GLM) object from [stats::glm()].
+#' @param conf_level Numeric value between 0.001 and 0.999 (default = 0.95) specifying the confidence level for the confidence interval.
+#' @param confint_fast_estimate Boolean (default = `FALSE`) indicating whether to use a faster estimate of the confidence interval. Note: this assumes normally distributed data, which may not be suitable for your data.
+#' @param use_model_data_only Boolean (default = `FALSE`) indicating whether to use only the subset of data that was used as part of the multivariable model, or set to `TRUE` to use the full set of data provided to the multivariable model. Note, any records containing missing values for any of the outcome or predictor variables are automatically excluded from the multivariable model by {stats::glm}, so the overall number of records used in multivariable models can be much lower than the total number of records supplied to the function. Set to `TRUE` to increase comparability between the univariable and multivariable models, set to `FALSE` to gain a more holistic view of the invididual relationships between predictors and outcome.
+#'
+#' @returns Tibble providing a combined summary table of univariable and multivariable summaries
+#' @noRd
+get_combined_summaries <- function(
+  model,
+  conf_level = 0.95,
+  confint_fast_estimate = FALSE,
+  use_model_data_only = TRUE
+) {
+  # gather some data ----
+  # define a list of variables common to both datasets, which varies depending
+  # on whether the univariable summary is based on model data only
+  if (use_model_data_only) {
+    common_vars <- c(
+      "group",
+      "label",
+      "level",
+      "class",
+      "rows",
+      "outcome",
+      "outcome_rate"
+    )
+  } else {
+    common_vars <- c("group", "label", "level", "class")
+  }
+
+  # get a multivariable summary
+  mv_summary <-
+    get_summary_table(
+      glm_model_results = model,
+      conf_level = conf_level,
+      confint_fast_estimate = confint_fast_estimate
+    )
+
+  # get a univariable summary
+  uv_summary <-
+    get_univariable_summary_table(
+      glm = model,
+      conf_level = conf_level,
+      confint_fast_estimate = confint_fast_estimate,
+      use_model_data_only = use_model_data_only
+    )
+
+  # main ----
+  # start the table with the common variables plus 'term' as the common field for subsequent table joins
+  combined_summary <-
+    mv_summary |>
+    dplyr::select(c("term", dplyr::any_of(common_vars)))
+
+  # combine uv and mv summaries to a list
+  summary_list <- list("uv" = uv_summary, "mv" = mv_summary)
+
+  # iterate over each summary and prefix variable names with either 'uv_'
+  # or 'mv_', depending on whether the summary is univariable or multivariable
+  summary_list <-
+    purrr::imap(
+      .x = summary_list,
+      .f = \(.summary, .name) {
+        # process the tibble
+        df <-
+          .summary |>
+          # exclude the common variables
+          dplyr::select(!dplyr::any_of(common_vars)) |>
+          # prefix variables with the name of the list item,
+          # (e.g. 'uv' or 'mv') except 'term'
+          dplyr::rename_with(
+            .cols = !dplyr::all_of("term"),
+            .fn = ~ glue::glue("{.name}_{.x}")
+          )
+      }
+    )
+
+  # left-join these summaries to the combined summary
+  combined_summary <-
+    combined_summary |>
+    dplyr::left_join(
+      y = summary_list[[1]],
+      by = dplyr::join_by("term" == "term")
+    ) |>
+    dplyr::left_join(
+      y = summary_list[[2]],
+      by = dplyr::join_by("term" == "term")
+    )
+
+  # return the result
+  return(combined_summary)
+}
+
+#' Prepare a multivariable model summary table
+#'
+#' @description
+#' Create a formatted table summarising a binomial (logistic) multivariable
+#' model.
+#'
+#' @details
+#' This function coordinates the production of multivariable model summary table
+#' from a fitted binomial Generalised Linear Model (GLM). For each predictor
+#' (and its levels, when factor variables are present) the table contains:
+#' - *Characteristics*: number of records analysed, number of events (outcome
+#'   = 1) and the conversion rate (events / analysed).
+#' - *Odds Ratio (OR)*: point estimate, standard error (SE), and p-value for
+#'   the OR
+#' - *Confidence Interval (CI)*: lower and upper bounds for the CI at
+#'   `conf_level` and a flag for statistical significance (based on CI).
+#' - *OR Plot*: graphical representation of the OR and CI (when output supports
+#'   it)
+#'
+#' The function optionally:
+#' - uses a faster normal-approximation for CIs (`confint_fast_estimate` =
+#'   TRUE),
+#' - performs assumption checks for logistic regression (`assumption_checks` =
+#'   TRUE),
+#' - anonymises small cell counts for disclosure control (`anonymise_counts` =
+#'   TRUE)
+#'
+#' @param glm_model_results Results from a binomial Generalised Linear Model (GLM), as produced by [stats::glm()].
+#' @param conf_level Numeric value between 0.001 and 0.999 (default = 0.95) specifying the confidence level for the confidence interval.
+#' @param output String describing the output type (default = 'tibble'). Options include 'tibble' and 'gt'.
+#' @param confint_fast_estimate Boolean (default = `FALSE`) indicating whether to use a faster estimate of the confidence interval. Note: this assumes normally distributed data, which may not be suitable for your data.
+#' @param assumption_checks Boolean (default = `TRUE`) indicating whether to conduct checks to ensure that the assumptions of logistic regression are met.
+#' @param anonymise_counts Boolean (default = `FALSE`) indicating whether to anonymise counts in the output table. If `TRUE`, counts less than 10 are suppressed and otherwise rounded to the nearest multiple of 5.
+#'
+#' @returns
+#' If `output` = "tibble": a tibble (classes "tbl_df", "tbl", "data.frame").
+#' If `output` = "gt": a gt table object ("gt_tbl")
+#'
+#' @noRd
+prepare_multivariable_table_object <- function(
+  glm_model_results,
+  conf_level = 0.95,
+  output = c("tibble", "gt"),
+  confint_fast_estimate = FALSE,
+  assumption_checks = TRUE,
+  anonymise_counts = FALSE
+) {
+  # get summary of rows and estimate OR
+  df <- get_summary_table(
+    glm_model_results = glm_model_results,
+    conf_level = conf_level,
+    confint_fast_estimate = confint_fast_estimate
+  )
+
+  # get the outcome variable
+  str_outcome <- get_outcome_variable_name(model = glm_model_results)
+
+  # prepare for output
+  df <-
+    df |>
+    # remove variables which aren't necessary for table views
+    dplyr::select(
+      !dplyr::any_of(c(
+        'term',
+        'rows_scale',
+        'label_or',
+        'group',
+        'p_label'
+      ))
+    )
+
+  # anonymise count data if requested
+  if (anonymise_counts) {
+    df <-
+      df |>
+      dplyr::mutate(
+        dplyr::across(
+          .cols = dplyr::any_of(c("outcome", "rows")),
+          .fns = ~ anonymise_count_values(.x)
+        )
+      )
+  }
+
+  # decide what object to return
+  obj_return <-
+    switch(
+      output,
+      # output a tibble
+      'tibble' = {
+        df
+      },
+
+      # output a gt-formatted table
+      'gt' = {
+        df |>
+          dplyr::group_by(.data$label) |>
+          output_gt(
+            conf_level = conf_level,
+            title = str_outcome
+          )
+      }
+    )
+
+  # return the result
+  return(obj_return)
+}
+
+#' Prepare a combined univariable and multivariable summary table
+#'
+#' @description
+#' Create a formatted table summarising a binomial (logistic) multivariable
+#' model together with univariable summaries for each predictor.
+#'
+#' @details
+#' This function coordinates the production of a combined univariable and multivariable model summary table from a fitted binomial Generalised Linear Model (GLM). For each predictor (and its levels, when factor variables are present) the table contains:
+#' - *CHaracteristics*: number of records analysed, number of events (outcome = 1) and the conversion rate (events / analysed).
+#' - *Univariable results*: unadjusted Odds Ratio (OR), confidence interval at `conf_level`, and p-value from a univariable logistic regression.
+#' - *Multivariable results*: adjusted OR, confidence interval at `conf_level`, and p-value from the provided multivariable GLM.
+#'
+#' The function optionally:
+#' - uses a faster normal-approximation for CIs (`confint_fast_estimate` =
+#'   TRUE),
+#' - performs assumption checks for logistic regression (`assumption_checks` =
+#'   TRUE),
+#' - anonymises small cell counts for disclosure control (`anonymise_counts` =
+#'   TRUE)
+#' - restricts univariable calculations to the same data used by the
+#'   multivariable model or uses the full dataset (`use_model_data_only`).
+#'
+#' @param glm_model_results Results from a binomial Generalised Linear Model (GLM), as produced by [stats::glm()].
+#' @param conf_level Numeric value between 0.001 and 0.999 (default = 0.95) specifying the confidence level for the confidence interval.
+#' @param output String describing the output type (default = 'tibble'). Options include 'tibble' and 'gt'.
+#' @param confint_fast_estimate Boolean (default = `FALSE`) indicating whether to use a faster estimate of the confidence interval. Note: this assumes normally distributed data, which may not be suitable for your data.
+#' @param assumption_checks Boolean (default = `TRUE`) indicating whether to conduct checks to ensure that the assumptions of logistic regression are met.
+#' @param anonymise_counts Boolean (default = `FALSE`) indicating whether to anonymise counts in the output table. If `TRUE`, counts less than 10 are suppressed and otherwise rounded to the nearest multiple of 5.
+#' @param use_model_data_only Boolean (default = `TRUE`) indicating whether to use only the subset of data that was used as part of the multivariable model, or set to `TRUE` to use the full set of data provided to the multivariable model. Note, any records containing missing values for any of the outcome or predictor variables is automatically excluded from the multivariable model by {stats::glm}, so the overall number of records used in multivariable models can be much lower than the total number of records supplied to the function. Set to `TRUE` to increase comparability between the univariable and multivariable models, set to `FALSE` to gain a more holistic view of the invididual relationships between predictors and outcome.
+#'
+#' @returns
+#' If `output` = "tibble": a tibble (classes "tbl_df", "tbl", "data.frame").
+#' If `output` = "gt": a gt table object ("gt_tbl")
+#'
+#' @noRd
+prepare_combined_table_object <- function(
+  glm_model_results,
+  conf_level = 0.95,
+  output = c("tibble", "gt"),
+  confint_fast_estimate = FALSE,
+  assumption_checks = TRUE,
+  anonymise_counts = FALSE,
+  use_model_data_only = TRUE
+) {
+  # get a summary table
+  df <- get_combined_summaries(
+    model = glm_model_results,
+    conf_level = conf_level,
+    confint_fast_estimate = confint_fast_estimate,
+    use_model_data_only = use_model_data_only
+  )
+
+  # get the outcome variable
+  str_outcome <- get_outcome_variable_name(model = glm_model_results)
+
+  # anonymise count data if requested
+  if (anonymise_counts) {
+    df <-
+      df |>
+      dplyr::mutate(
+        dplyr::across(
+          .cols = dplyr::ends_with(c("outcome", "rows")),
+          .fns = ~ anonymise_count_values(.x)
+        )
+      )
+  }
+
+  # decide what object to return
+  obj_return <-
+    switch(
+      output,
+      # output a tibble
+      'tibble' = {
+        df
+      },
+
+      # output a gt-formatted table
+      'gt' = {
+        df |>
+          output_gt_combined(
+            conf_level = conf_level,
+            title = str_outcome,
+            use_model_data_only = use_model_data_only
+          )
+      }
+    )
+
+  # return the result
+  return(obj_return)
+}
 
 ## assumptions funcs -----------------------------------------------------------
 
@@ -1065,14 +1937,29 @@ get_outcome_variable_name <- function(model, return_var_name = FALSE) {
 #'
 #' @returns Named list indicating the results of each assumption
 #' @noRd
-check_assumptions <- function(glm, details = FALSE) {
-
+check_assumptions <- function(
+  glm,
+  details = FALSE,
+  confint_fast_estimate = FALSE
+) {
   # check assumptions
   list_return <- list(
     assume_binary = assumption_binary_outcome(glm = glm, details = details),
-    assume_independent = assumption_no_multicollinearity(glm = glm, details = details),
-    assume_no_separation = assumption_no_separation(glm = glm, details = details),
-    assume_sample_size = assumption_sample_size(glm = glm, details = details)
+
+    assume_independent = assumption_no_multicollinearity(
+      glm = glm,
+      details = details
+    ),
+
+    assume_no_separation = ifelse(
+      test = confint_fast_estimate,
+      yes = assumption_no_separation_fast(glm = glm, details = details),
+      no = assumption_no_separation(glm = glm, details = details)
+    ),
+
+    assume_sample_size = assumption_sample_size(glm = glm, details = details),
+
+    assume_linearity = assumption_linearity(glm = glm, details = details)
   )
 
   # aborting assumptions
@@ -1081,7 +1968,6 @@ check_assumptions <- function(glm, details = FALSE) {
   }
 
   return(list_return)
-
 }
 
 
@@ -1105,7 +1991,6 @@ check_assumptions <- function(glm, details = FALSE) {
 #' @returns Boolean: TRUE = assumption is upheld, FALSE = assumption failed
 #' @noRd
 assumption_binary_outcome <- function(glm, details = FALSE) {
-
   # data prep ---
   # get the data
   df <- glm$model
@@ -1117,10 +2002,10 @@ assumption_binary_outcome <- function(glm, details = FALSE) {
   # assumption details ---
 
   # count outcomes as a tibble
-  df_outcome_count <- df |> dplyr::count({{var_outcome}})
+  df_outcome_count <- df |> dplyr::count({{ var_outcome }})
 
   # what outcomes are included
-  outcome_levels <- df_outcome_count |> dplyr::pull({{var_outcome}})
+  outcome_levels <- df_outcome_count |> dplyr::pull({{ var_outcome }})
 
   # count how many levels are in the outcome
   outcome_level_count <- length(outcome_levels)
@@ -1168,7 +2053,6 @@ assumption_binary_outcome <- function(glm, details = FALSE) {
 
   # return the result
   return(result)
-
 }
 
 #' Check for multicollinearity
@@ -1229,7 +2113,6 @@ assumption_binary_outcome <- function(glm, details = FALSE) {
 #' @returns Boolean: TRUE = assumption is upheld, FALSE = assumption failed
 #' @noRd
 assumption_no_multicollinearity <- function(glm, details = FALSE) {
-
   # get the variance inflation factor (VIF) or
   df_vif <- car::vif(glm) |>
     tibble::as_tibble(rownames = 'predictor') |>
@@ -1247,7 +2130,7 @@ assumption_no_multicollinearity <- function(glm, details = FALSE) {
     dplyr::mutate(
       dplyr::across(
         .cols = dplyr::any_of('gvif_scaled'),
-        .fns = \(.x) .x ^ 2,
+        .fns = \(.x) .x^2,
         .names = "{.col}_squared"
       )
     )
@@ -1262,19 +2145,23 @@ assumption_no_multicollinearity <- function(glm, details = FALSE) {
       # models involving continuous predictors only
       dplyr::across(
         .cols = dplyr::any_of('vif'),
-        .fns = \(.x) dplyr::case_when(
-          .x >= var_thresholds['VIF'] ~ TRUE,
-          .default = FALSE
-        ),
+        .fns = \(.x) {
+          dplyr::case_when(
+            .x >= var_thresholds['VIF'] ~ TRUE,
+            .default = FALSE
+          )
+        },
         .names = "above_threshold"
       ),
       # models involving categorical variables
       dplyr::across(
         .cols = dplyr::any_of('gvif_scaled_squared'),
-        .fns = \(.x) dplyr::case_when(
-          .x >= var_thresholds['GVIF^(1/(2*Df))^2'] ~ TRUE,
-          .default = FALSE
-        ),
+        .fns = \(.x) {
+          dplyr::case_when(
+            .x >= var_thresholds['GVIF^(1/(2*Df))^2'] ~ TRUE,
+            .default = FALSE
+          )
+        },
         .names = "above_threshold"
       )
     )
@@ -1294,7 +2181,7 @@ assumption_no_multicollinearity <- function(glm, details = FALSE) {
 
   # what measure of inflation was used
   var_measure <- dplyr::if_else(
-    condition =  'gvif_scaled_squared' %in% names(df_vif),
+    condition = 'gvif_scaled_squared' %in% names(df_vif),
     true = 'GVIF^(1/(2*Df))^2',
     false = 'VIF'
   )
@@ -1341,8 +2228,12 @@ assumption_no_multicollinearity <- function(glm, details = FALSE) {
       wrap = TRUE
     )
     cli::cli_ul()
-    cli::cli_li("For the VIF, a threshold of 5 or higher indicates multicollinearity.")
-    cli::cli_li("For the GVIF-based measures, a threshold of 2 or higher is used to indicate multicollinearity")
+    cli::cli_li(
+      "For the VIF, a threshold of 5 or higher indicates multicollinearity."
+    )
+    cli::cli_li(
+      "For the GVIF-based measures, a threshold of 2 or higher is used to indicate multicollinearity"
+    )
   }
 
   # return the result
@@ -1376,7 +2267,6 @@ assumption_no_multicollinearity <- function(glm, details = FALSE) {
 #' @returns Boolean: TRUE = assumption is upheld, FALSE = assumption failed
 #' @noRd
 assumption_no_separation <- function(glm, details = FALSE) {
-
   # get the model data
   glm_df <- glm$model
 
@@ -1399,7 +2289,6 @@ assumption_no_separation <- function(glm, details = FALSE) {
 
   # identify which predictor variables are responsible for separation
   if (separation) {
-
     # get the predictor variables
     var_predictors <- attr(glm$terms, "term")
 
@@ -1408,7 +2297,6 @@ assumption_no_separation <- function(glm, details = FALSE) {
       purrr::map_dfr(
         .x = var_predictors,
         .f = function(.predictor) {
-
           # remove the predictor from the formula
           glm_fm_test <- stats::update(glm_fm, paste("~ . -", .predictor))
 
@@ -1454,7 +2342,7 @@ assumption_no_separation <- function(glm, details = FALSE) {
     # provide general advice on this assumption
     cli::cli_h3("About")
     cli::cli_alert_info(
-      "The assumption of no separation in logistic regression is important because it ensures that the predictor variables do not perfectly predict the outcome variable. If separation occurs, it can lead to infinite estimates for the coefficients, making the model unstable and unreliable. This can result in difficulties in interpretation and hinder the model's ability to generalize to new data.",
+      "The assumption of no separation in logistic regression is important because it ensures that the predictor variables do not perfectly predict the outcome variable. If separation occurs, it can lead to infinite estimates for the coefficients, making the model unstable and unreliable. This can result in difficulties in interpretation and hinder the model's ability to generalise to new data.",
       wrap = TRUE
     )
     cli::cli_alert_info(
@@ -1464,6 +2352,133 @@ assumption_no_separation <- function(glm, details = FALSE) {
   }
 
   # return the result
+  return(result)
+}
+
+#' Check for complete separation in logistic regression
+#'
+#' This function checks for potential issues with complete separation.
+#'
+#' Complete separation happens when one or more predictors perfectly predict
+#' the binary outcome. In such cases, coefficient estimates and standard
+#' errors can become unstable, undermining inference and interpretation.
+#'
+#' This function tests each predictor in a binomial GLM for potential
+#' separation:
+#' - Numeric predictors: checks whether the range of values for each
+#'   outcome class overlaps. Non-overlapping ranges signal separation.
+#' - Categorical predictors: checks whether any factor level has zero
+#'   observations in one of the outcome classes.
+#'
+#' If a predictor shows signs of separation, a warning is issued. The warning
+#' does not stop execution but indicates you should review your model and data
+#' more closely.
+#'
+#' @param glm Results from a binomial Generalised Linear Model (GLM), as produced by [stats::glm()].
+#' @param details Boolean: TRUE = additional details will be printed to the Console if this assumption fails, FALSE = additional details will be suppressed.
+#'
+#' @returns Boolean: TRUE = assumption is upheld, FALSE = assumption failed
+#' @noRd
+assumption_no_separation_fast <- function(glm, details = FALSE) {
+  # gather some information
+  df <- glm$model
+  outcome <- glm$formula[[2]]
+  predictors <-
+    summarise_rows_per_variable_in_model(glm) |>
+    dplyr::select(dplyr::all_of(c("group", "class"))) |>
+    dplyr::distinct()
+
+  # test each predictor for separation
+  results <-
+    purrr::map2_dfr(
+      .x = predictors$group,
+      .y = predictors$class %in% c('integer', 'numeric'),
+      .f = \(.pred, .numeric) {
+        # test for separation depends on whether the predictor is numeric
+        if (.numeric) {
+          # work out the predictor ranges for each outcome
+          range <-
+            df |>
+            dplyr::summarise(
+              low = min({{ .pred }}, na.rm = TRUE),
+              high = max({{ .pred }}, na.rm = TRUE),
+              .by = outcome
+            )
+
+          # do the ranges overlap?
+          result <-
+            (range[[1, 2]] <= range[[2, 3]]) &
+            (range[[2, 2]] <= range[[1, 3]])
+        } else {
+          # a factor variable:
+          # do any levels result in zero outcomes?
+          result <-
+            df |>
+            # count the outcomes by the predictor
+            dplyr::count({{ outcome }}, {{ .pred }}) |>
+            # put the outcome as columns
+            tidyr::pivot_wider(
+              names_from = {{ outcome }},
+              values_from = "n",
+              values_fill = 0
+            ) |>
+            dplyr::rename("n0" = 2, "n1" = 3) |>
+            dplyr::filter("n0" == 0 | "n1" == 0) |>
+            dplyr::summarise(separated = dplyr::n() > 0) |>
+            dplyr::pull("separated")
+        }
+
+        # return the result
+        df_result <- tibble::tibble(
+          predictor = .pred,
+          separation = result
+        )
+        return(df_result)
+      }
+    )
+
+  # consolidate the results to a single TRUE / FALSE
+  result <- !results$separation |> any(na.rm = TRUE)
+
+  # list predictors where there are signs of separation
+  var_separation <- results |>
+    dplyr::filter("separation" == TRUE) |>
+    dplyr::pull("predictor")
+
+  # alert details ---
+
+  # alert the user if this assumption is not held
+  if (!result) {
+    cli::cli_warn(
+      "Signs of separation detected in {length(var_separation)} of your predictor variables."
+    )
+  }
+
+  # provide additional details if requested
+  if (!result && details) {
+    cli::cli_h1("No separation assumption")
+    cli::cli_alert_warning(
+      "Signs of separation detected in {length(var_separation)} of your predictor variables."
+    )
+    cli::cli_alert(
+      "{.var {var_separation}} {?is/are} associated with complete separation.",
+      wrap = TRUE
+    )
+    cli::cli_alert("The Odds Ratio estimates are likely to be unreliable.")
+
+    # provide general advice on this assumption
+    cli::cli_h3("About")
+    cli::cli_alert_info(
+      "The assumption of no separation in logistic regression is important because it ensures that the predictor variables do not perfectly predict the outcome variable. If separation occurs, it can lead to infinite estimates for the coefficients, making the model unstable and unreliable. This can result in difficulties in interpretation and hinder the model's ability to generalise to new data.",
+      wrap = TRUE
+    )
+    cli::cli_alert_info(
+      "Your data was analysed for complete separation. For numeric predictors, the ranges of each outcome class were compared. Non-overlapping ranges indicate separation. For categorical predictors, each factor level was checked to ensure it appears in both outcome classes; any level found in only one class signals separation.",
+      wrap = TRUE
+    )
+  }
+
+  # return the results
   return(result)
 }
 
@@ -1496,8 +2511,11 @@ assumption_no_separation <- function(glm, details = FALSE) {
 #'
 #' @returns Boolean: TRUE = assumption is upheld, FALSE = assumption failed
 #' @noRd
-assumption_sample_size <- function(glm, min_events_per_predictor = 10, details = FALSE) {
-
+assumption_sample_size <- function(
+  glm,
+  min_events_per_predictor = 10,
+  details = FALSE
+) {
   # get the model data
   glm_df <- glm$model
 
@@ -1550,17 +2568,20 @@ assumption_sample_size <- function(glm, min_events_per_predictor = 10, details =
 
   # only proceed if there is at least one factor predictor
   if (length(predictor_factors) > 0) {
-
     # count observations by each level of the factor predictors
     predictor_factor_level_count <-
       purrr::map_dfr(
         .x = predictor_factors,
         .f = function(.var = .data$.x, .df = glm$model) {
-
           # rename the outcome variable and standardise the levels
           .df <-
             .df |>
-            dplyr::rename(outcome = dplyr::all_of(temp_outcome_var))
+            dplyr::rename(outcome = dplyr::all_of(temp_outcome_var)) |>
+            dplyr::mutate(
+              outcome = .data$outcome |>
+                as.character() |>
+                forcats::fct()
+            )
 
           levels(.df$outcome)[1] <- ".nonevent"
           levels(.df$outcome)[2] <- ".event"
@@ -1568,36 +2589,47 @@ assumption_sample_size <- function(glm, min_events_per_predictor = 10, details =
           # count the number of observations in each level of predictor
           df <-
             .df |>
+            # tidyr::complete(outcome) |>
             # count rows by the outcome for each predictor variable (.var) level
             dplyr::summarise(
-              predictor = {{.var}},
+              predictor = {{ .var }},
               n = dplyr::n(),
-              .by = c("outcome", {{.var}})
+              .by = c("outcome", {{ .var }})
             ) |>
             # rename var to level and move predictor to start of tibble
-            dplyr::rename(level = {{.var}}) |>
+            dplyr::rename(level = {{ .var }}) |>
             dplyr::relocate("predictor", .before = "level") |>
             # sort by count (in case this needs displaying)
             dplyr::arrange(dplyr::desc(.data$n)) |>
             # pivot outcomes to their own columns
             tidyr::pivot_wider(
               names_from = dplyr::any_of("outcome"),
-              #values_from = .data$n
               values_from = "n"
+            ) |>
+            # replace any NA values with zeroes (in cases of complete separation)
+            dplyr::mutate(
+              dplyr::across(
+                # .cols = c(".event", ".nonevent"),
+                .cols = dplyr::any_of(c(".event", ".nonevent")),
+                .fns = ~ dplyr::coalesce(.x, 0L)
+              )
             )
         }
       )
 
     # test the condition
     result_factors <-
-      (min(predictor_factor_level_count$.nonevent) >= min_events_per_predictor) &
+      (min(predictor_factor_level_count$.nonevent) >=
+        min_events_per_predictor) &
       (min(predictor_factor_level_count$.event) >= min_events_per_predictor)
 
     # gather some additional information
     predictor_factor_level_too_small <-
       predictor_factor_level_count |>
-      dplyr::filter(.data$.nonevent < min_events_per_predictor |
-                      .data$.event < min_events_per_predictor)
+      dplyr::filter(
+        .data$.nonevent < min_events_per_predictor |
+          .data$.event < min_events_per_predictor
+      )
   }
 
   # alert details ---
@@ -1669,4 +2701,178 @@ assumption_sample_size <- function(glm, min_events_per_predictor = 10, details =
 
   # return the result
   return(result & result_factors)
+}
+
+#' Check for Linearity in Logistic Regression
+#'
+#' @description
+#' Evaluates the linearity assumption in logistic regression by testing
+#' whether continuous predictors have a linear relationship with the log-odds
+#' of the outcome.
+#'
+#' @details
+#' Logistic regression assumes that continuous predictors have a linear
+#' relationship with the log-odds of the outcome. This allows transforming
+#' probabilities into a linear space (log-odds) where predictors can have
+#' a linear relationship, while keeping final probabilities between 0 and 1.
+#'
+#' @section Potential Issues:
+#' Violation of the linearity assumption can lead to:
+#' - Biased odds ratio estimates
+#' - Reduced model accuracy
+#' - Misspecification of predictor effects
+#'
+#' @section Methodology:
+#' The function uses the Box-Tidwell power transformation:
+#' - Creates interaction terms between continuous predictors and their log
+#' - Compares the original model with an expanded model including these interactions
+#' - Performs a likelihood ratio test to assess model fit improvement
+#'
+#' @section Interpretation:
+#' - Significant likelihood ratio test suggests non-linear relationships
+#' - Significant interaction term p-values indicate specific predictors
+#'   that may benefit from transformation
+#'
+#' @note
+#' Warnings are not prescriptive. They suggest further investigation
+#' is needed to validate model assumptions.
+#' @param glm Results from a binomial Generalised Linear Model (GLM), as produced by `stats::glm()`
+#' @param details Boolean: TRUE = additional details will be printed to the Console if this assumption fails, FALSE = additional details will be suppressed.
+#' @param p_val_threshold Numeric - what value of p-value is the threshold below which the assumption of linearity is upheld, default = 0.05
+#'
+#' @returns Boolean: TRUE = assumption is upheld, FALSE = assumption failed
+#' @noRd
+assumption_linearity <- function(glm, details = FALSE, p_val_threshold = 0.05) {
+  # get a summary of predictors used in the model
+  predictors <- summarise_rows_per_variable_in_model(glm)
+
+  # get the continuous predictors
+  predictors_continuous <-
+    predictors |>
+    dplyr::filter(class %in% c("numeric", "integer")) |>
+    dplyr::pull("group") |>
+    unique()
+
+  # conduct the test (if there is at least one continuous predictor)
+  if (length(predictors_continuous) == 0) {
+    # set the result as 'TRUE', i.e. there are no issues with linearity
+    result = TRUE
+  } else {
+    # create interaction terms between continuous variables and their log
+    interaction_terms <-
+      purrr::map(
+        .x = predictors_continuous,
+        # NB, using log1p in case there are any zeroes
+        .f = \(.x) glue::glue("I({.x} * log1p({.x}))")
+      )
+
+    # convert the list to a vector
+    interaction_terms <- unlist(interaction_terms)
+
+    # add the interaction terms to the formula
+    expanded_formula <-
+      stats::reformulate(
+        termlabels = c(all.vars(glm$formula)[-1], interaction_terms),
+        response = all.vars(glm$formula)[1]
+      )
+
+    # fit the expanded model (warnings are suppressed)
+    expanded_glm <-
+      suppressWarnings(
+        stats::glm(
+          formula = expanded_formula,
+          family = "binomial",
+          data = glm$model
+        )
+      )
+
+    # handle expanded models where there is perfect separation
+    if (any(is.na(expanded_glm$coefficients))) {
+      # set the result as TRUE (i.e no issues) as it not possible to continue
+      # with this test
+      result <- TRUE
+    } else {
+      # perform the likelihood ratio test
+      lr_test <-
+        stats::anova(
+          glm,
+          expanded_glm,
+          test = "Chisq"
+        ) |>
+        janitor::clean_names()
+
+      # extract the p-values for the interaction terms
+      interaction_pvalues <-
+        summary(expanded_glm)$coefficients |>
+        tibble::as_tibble(rownames = "term") |>
+        dplyr::filter(.data$term %in% interaction_terms) |>
+        janitor::clean_names()
+
+      # summarise the results
+
+      # get the p-value from the likelihood ratio test
+      linearity_probability <-
+        lr_test |>
+        tibble::as_tibble() |>
+        dplyr::slice_tail(n = 1) |>
+        dplyr::pull("pr_chi") |>
+        # set probability as zero if is NA (because exactly the same)
+        dplyr::coalesce(0)
+
+      # is the assumption upheld?
+      result <- linearity_probability > p_val_threshold
+
+      # which predictors are not linearly related?
+      predictors_nonlinear <-
+        interaction_pvalues |>
+        # select those who are unlikely to be linear
+        dplyr::filter(.data$pr_z <= p_val_threshold) |>
+        dplyr::mutate(
+          # extract the original term from the interaction term
+          term_original = .data$term |>
+            stringr::str_extract("(?<=I\\()([^*]+)(?=\\s*\\*)") |>
+            stringr::str_trim()
+        ) |>
+        # pull out to a vector
+        dplyr::pull("term_original")
+    }
+  }
+
+  # alert details ---
+
+  # alert the user if this assumption is not held
+  if (!result) {
+    cli::cli_warn(
+      "Signs of a non-linear relationship detected in {length(predictors_nonlinear)} of your continuous predictor variables.",
+      wrap = TRUE
+    )
+  }
+
+  # provide additional details if requested
+  if (!result & details) {
+    cli::cli_h1("Linearity assumption")
+    cli::cli_alert_warning(
+      "Signs of a non-linear relationship detected in {length(predictors_nonlinear)} of your continuous predictor variables.",
+      wrap = TRUE
+    )
+    cli::cli_alert(
+      "{.var {predictors_nonlinear}} {?appears/appear} to have non-linear relationship with the log-odds of the outcome.",
+      wrap = TRUE
+    )
+    cli::cli_alert("The Odds Ratio estimates are likely to be unreliable.")
+
+    # provide general advice on this assumption
+    cli::cli_h3("About")
+    cli::cli_alert_info(
+      "When the linearity assumption holds, each unit change in a continuous predictor produces a consistent, predictable change in the log-odds of the outcome. This consistency is crucial for reliable statistical inference. However, when linearity is violated, the model can produce misleading Odds Ratio estimates.",
+      wrap = TRUE
+    )
+    cli::cli_alert_info(
+      "Your data was analysed using a Box-Tidwell power transformation with interaction terms between continuous predictors and their log. A likelihood ratio test found the transformed model a better fit to the data, indicating there are non-linear relationships in your model data",
+      wrap = TRUE
+    )
+  }
+
+  # return the result
+  return(result)
 }
