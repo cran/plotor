@@ -1,7 +1,7 @@
 Package: plotor
 Type: Package
 Title: Odds Ratio Tools for Logistic Regression
-Version: 0.8.0
+Version: 1.0.0
 Authors@R: 
   person(
     'Craig', 'Parylo', 
@@ -18,23 +18,23 @@ Description:
     model assumptions.
 License: MIT + file LICENSE
 Encoding: UTF-8
-Imports: broom, car, cli, detectseparation, dplyr, forcats, ggplot2,
-        glue, gt, janitor, purrr, rlang, scales, stats, stringr,
-        tibble, tidyr, tidyselect
+Imports: broom, callr, car, cli, detectseparation, dplyr, forcats,
+        ggplot2 (>= 4.0.0), glue, gt, gtExtras (>= 0.6.1), janitor,
+        prettyunits, purrr, rlang, scales, stats, stringr, tibble,
+        tidyr, tidyselect
 RoxygenNote: 7.3.3
-Suggests: datasets, knitr, labelled, magrittr, MASS, medicaldata (>=
-        0.2.0.9001), NHANES, R4HCR, rmarkdown, svglite, testthat (>=
-        3.0.0), vdiffr
+Suggests: datasets, here, knitr, labelled, magrittr, MASS, medicaldata,
+        NHANES, R4HCR, rmarkdown, svglite, testthat (>= 3.0.0), vdiffr,
+        webshot2
 VignetteBuilder: knitr
 URL: https://github.com/craig-parylo/plotor,
         https://craig-parylo.github.io/plotor/
 BugReports: https://github.com/craig-parylo/plotor/issues
 Config/testthat/edition: 3
 Depends: R (>= 4.1.0)
-Config/Remotes: higgi13425/medicaldata
 NeedsCompilation: no
-Packaged: 2025-12-08 08:00:24 UTC; craigparylo
+Packaged: 2026-02-14 16:39:38 UTC; craigparylo
 Author: Craig Parylo [aut, cre, cph] (ORCID:
     <https://orcid.org/0000-0003-4297-7808>)
 Repository: CRAN
-Date/Publication: 2025-12-08 08:20:07 UTC
+Date/Publication: 2026-02-14 17:00:02 UTC

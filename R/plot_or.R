@@ -57,13 +57,29 @@ plot_or <- function(
   # check the model is logistic regression
   valid_glm_model <- validate_glm_model(glm_model_results)
 
+  # check whether a fast estimate is appropriate
+  confint_fast_estimate <- double_check_confint_fast_estimate(
+    glm = glm_model_results,
+    confint_fast_estimate = confint_fast_estimate
+  )
+
   # check logistic regression assumptions if the user requested it
   if (assumption_checks) {
-    valid_assumptions <- check_assumptions(
-      glm = glm_model_results,
-      details = FALSE,
-      confint_fast_estimate = confint_fast_estimate
-    )
+    if (use_spinner()) {
+      # run the process with a spinner
+      valid_assumptions <- check_assumptions_with_spinner(
+        glm = glm_model_results,
+        details = FALSE,
+        confint_fast_estimate = confint_fast_estimate
+      )
+    } else {
+      # run directly
+      valid_assumptions <- check_assumptions(
+        glm = glm_model_results,
+        details = FALSE,
+        confint_fast_estimate = confint_fast_estimate
+      )
+    }
 
     # recommend to the user to use `check_or` for more feedback if at least one
     # test fails
@@ -81,11 +97,21 @@ plot_or <- function(
   # main ----
 
   # get summary of the data and results
-  df <- get_summary_table(
-    glm_model_results = glm_model_results,
-    conf_level = conf_level,
-    confint_fast_estimate = confint_fast_estimate
-  )
+  if (use_spinner()) {
+    # run the function in the background with a spinner
+    df <- get_summary_table_with_spinner(
+      glm_model_results = glm_model_results,
+      conf_level = conf_level,
+      confint_fast_estimate = confint_fast_estimate
+    )
+  } else {
+    # run the function directly
+    df <- get_summary_table(
+      glm_model_results = glm_model_results,
+      conf_level = conf_level,
+      confint_fast_estimate = confint_fast_estimate
+    )
+  }
 
   # plot the results
   p <- plot_odds_ratio(
@@ -173,9 +199,15 @@ table_or <- function(
   # check the model is logistic regression
   valid_glm_model <- validate_glm_model(glm_model_results)
 
+  # check whether a fast estimate is appropriate
+  confint_fast_estimate <- double_check_confint_fast_estimate(
+    glm = glm_model_results,
+    confint_fast_estimate = confint_fast_estimate
+  )
+
   # check logistic regression assumptions if the user requested it
   if (assumption_checks) {
-    valid_assumptions <- check_assumptions(
+    valid_assumptions <- check_assumptions_with_spinner(
       glm = glm_model_results,
       details = FALSE,
       confint_fast_estimate = confint_fast_estimate
@@ -279,7 +311,7 @@ check_or <- function(
 
   # get a summary of test results
   # NB, detailed feedback is handled by each of the test functions
-  test_results <- check_assumptions(
+  test_results <- check_assumptions_with_spinner(
     glm = glm_model_results,
     confint_fast_estimate = confint_fast_estimate,
     details = details
@@ -355,6 +387,19 @@ check_or <- function(
     )
   }
 
+  # no influential observations
+  if (test_results$assume_no_extreme) {
+    cli::cli_alert_success(
+      "No observations unduly influence model estimates",
+      wrap = TRUE
+    )
+  } else {
+    cli::cli_alert_danger(
+      "Some observations significantly distort model estimates",
+      wrap = TRUE
+    )
+  }
+
   # summary text
   cli::cli_par()
   cli::cli_end()
@@ -399,6 +444,14 @@ check_or <- function(
     "A likelihood ratio test was conducted to assess improvements in model fit compared to a model using Box-Tidwell power transformations on continuous predictors. Any observed improvement likely indicates non-linear relationships between the continuous predictors and the log-odds of the outcome."
   )
   cli::cli_end()
+
+  cli::cli_par()
+  cli::cli_text("{.emph Influential observations:}")
+  cli::cli_text(
+    "A test to identify observations that could disproportionately influence model statistics was applied. The test simultaneously examined three metrics: Cook's distance (measuring overall observation impact), leverage (quantifying an observation's distance from the data centre), and standardised residuals (indicating how unusual an observation is relative to the model). To minimise false positive, an observation was flagged only if it met at least two of these diagnostic criteria."
+  )
+  cli::cli_end()
+
   cli::cli_par()
   if (all(unlist(test_results))) {
     cli::cli_alert_success(
@@ -448,7 +501,8 @@ count_rows_by_variable <- function(df, var_name, outcome_name) {
 
   # calculate rows - split if categorical
   df <-
-    if (is.numeric(var_temp)) {
+    # numeric and ordered
+    if (is.numeric(var_temp) | is.ordered(var_temp)) {
       df |>
         dplyr::filter(!is.na(var_name)) |>
         dplyr::summarise(
@@ -464,6 +518,7 @@ count_rows_by_variable <- function(df, var_name, outcome_name) {
           'outcome'
         )))
     } else {
+      # cateogrical - split into each outcome level
       df |>
         dplyr::mutate(
           outcome = sum({{ outcome }} == outcome_txt),
@@ -502,19 +557,22 @@ count_rows_by_variable <- function(df, var_name, outcome_name) {
 #' @return Tibble summary of rows per variable used in the model
 #' @noRd
 summarise_rows_per_variable_in_model <- function(model_results) {
+  # get a character description for ordered factors
+  of_class <- get_class_for_ordered_factors()
+
   # get the data from the model object
   model_data <-
     model_results$model |>
     dplyr::as_tibble()
 
-  # get the model variables
-  model_vars = base::all.vars(stats::formula(model_results)[-2])
-
-  # get the outcome variable
-  model_outcome = base::all.vars(stats::formula(model_results))[1]
+  # formula parsing
+  model_formula <- stats::formula(model_results)
+  model_terms <- all.vars(model_formula)
+  model_vars <- model_terms[-1] # exclude the response variable
+  model_outcome <- model_terms[1]
 
   # get a summary of all model variables and levels (will be used as the spine)
-  df <- get_model_variables_and_levels(model_results = model_results)
+  df_test <- get_model_variables_and_levels(model_results = model_results)
 
   # count the number of rows used for each variable and level
   df_rows <-
@@ -529,23 +587,189 @@ summarise_rows_per_variable_in_model <- function(model_results) {
     # rescale rows (will be used to set the size of the dot in the plot)
     dplyr::mutate(
       rows_scale = dplyr::case_when(
-        .data$class == 'numeric' ~ 1,
+        .data$class == "numeric" ~ 1,
         .default = .data$rows |>
           scales::rescale(to = c(1, 5))
       )
     )
 
-  # combine the two data
-  df <-
-    df |>
+  # For non-ordered factors, expand the levels but keep the row counts
+  df_nof <-
+    df_test |>
+    # handle numeric and categorical
     dplyr::select(dplyr::any_of("term")) |>
     dplyr::left_join(
       y = df_rows,
-      by = dplyr::join_by('term' == 'term')
+      by = dplyr::join_by("term" == "term")
+    ) |>
+    dplyr::filter(class != of_class)
+
+  # for ordered factors, expand the levels for the overall row counts
+  if (of_class %in% df_rows$class) {
+    df_of <-
+      df_test |>
+      # rename the group
+      dplyr::rename("group" = "variable") |>
+      dplyr::left_join(
+        y = df_rows |>
+          dplyr::filter(class == of_class) |>
+          dplyr::select(!dplyr::any_of(c("level", "term"))),
+        by = dplyr::join_by("group" == "group")
+      ) |>
+      dplyr::filter(class == of_class)
+
+    # bind the two dfs
+    df_nof <-
+      dplyr::bind_rows(df_nof, df_of)
+  }
+
+  # ensure the variables are returned in the correct order
+  df_return <-
+    df_test |>
+    dplyr::select(dplyr::any_of(c("term"))) |>
+    dplyr::left_join(
+      y = df_nof,
+      by = dplyr::join_by("term" == "term")
+    ) |>
+    make_ordered_factors_compatible_with_broom() |>
+    # remove the reference 'zero' level for ordered factors
+    dplyr::filter(!(.data$class == of_class & .data$level == "zero"))
+  # order as factors
+  # dplyr::mutate(
+  #   term = term |> forcats::as_factor()
+  # )
+
+  # return
+  return(df_return)
+}
+
+#' Make ordered factors compatible with {broom}
+#'
+#' @description
+#' `summarise_rows_per_variable_in_model` creates term names for ordered-factor predictors that differ from the convention used by **broom** (`tidy()`).
+#' This function rewrites those term names (and their associcated labels) so that the resulting tibble can be merged wtih a `broom::tidy()` output without losing the correspondence between rows.
+#'
+#' @details
+#' For a logistic regression model (`lr`) with an ordered-factor predictor `pred1` that has four levels, the terms produced by `summarise_rows_per_variable_in_model` are `c("pred1zero", "pred1one", "pred1two", "pred1three")`. In contrast, `broom::tidy()` returns `c("pred1.L", "pred1.Q", "pred1.C")` - the "zero" (reference) level is omitted.
+#' Because the two outputs use different keys they cannot be combined directly. `make_ordered_factors_compatible_with_broom` maps the former naming scheme onto the latter, preserving the semantic meaning of each contrast.
+#' The function works for up to 20 ordered levels. It leaves non-ordered predictors untouched.
+#'
+#' @param df A tibble produced by `summarise_rows_per_variable_in_model` that contains at least the columns 'group', 'term' and 'level'. Each 'group' corresponds to a predictor name (e.g. 'pred1').
+#'
+#' @returns A tibble identical to 'df' except that:
+#'  * `term` is replaced by the broom-compatible term (e.g., 'pred1.L')
+#'  * `level` is replaced by a human-readable label (e.g., 'Linear (main)')
+#' Unmatched rows (e.g., reference levels) retain their original values.
+#'
+#' @noRd
+make_ordered_factors_compatible_with_broom <- function(df) {
+  # defensive checks
+  required_cols <- c("group", "term", "level")
+  missing_cols <- setdiff(required_cols, names(df))
+  if (length(missing_cols) > 0) {
+    cli::cli_abort("{.var df} must contain columns: {.val {required_cols}}")
+  }
+
+  # create a lookup tibble
+  df_lu <-
+    tibble::tibble(
+      index = 1:20,
+      in_word = c(
+        "one",
+        "two",
+        "three",
+        "four",
+        "five",
+        "six",
+        "seven",
+        "eight",
+        "nine",
+        "ten",
+        "eleven",
+        "twelve",
+        "thirteen",
+        "fourteen",
+        "fifteen",
+        "sixteen",
+        "seventeen",
+        "eighteen",
+        "nineteen",
+        "twenty"
+      ),
+      out_word = c(
+        ".L",
+        ".Q",
+        ".C",
+        "^4",
+        "^5",
+        "^6",
+        "^7",
+        "^8",
+        "^9",
+        "^10",
+        "^11",
+        "^12",
+        "^13",
+        "^14",
+        "^15",
+        "^16",
+        "^17",
+        "^18",
+        "^19",
+        "^20"
+      ),
+      out_label = c(
+        "Linear (main)",
+        "Quadratic",
+        "Cubic",
+        "Fourth order",
+        "Fifth order",
+        "Sixth order",
+        "Seventh order",
+        "Eighth order",
+        "Ninth order",
+        "Tenth order",
+        "Eleventh order",
+        "Twelfth order",
+        "Thirteenth order",
+        "Fourteenth order",
+        "Fifteenth order",
+        "Sixteenth order",
+        "Seventeenth order",
+        "Eighteenth order",
+        "Nineteenth order",
+        "Twentieth order"
+      )
     )
 
-  # return the table summary
-  return(df)
+  # iterate over each group in df and add broom-compatible terms and labels
+  df_lu_broom <-
+    purrr::map_dfr(
+      .x = df$group |> unique(),
+      .f = \(.x) {
+        df_lu |>
+          dplyr::mutate(
+            df_from = glue::glue("{.x}{in_word}"),
+            df_to = glue::glue("{.x}{out_word}")
+          ) |>
+          dplyr::select(dplyr::any_of(c("df_from", "df_to", "out_label")))
+      }
+    )
+
+  # return the input df with the new terms added
+  df <-
+    df |>
+    dplyr::left_join(
+      y = df_lu_broom,
+      by = dplyr::join_by("term" == "df_from")
+    ) |>
+    # use the new terms and levels
+    dplyr::mutate(
+      term = dplyr::coalesce(.data$df_to, .data$term),
+      level = dplyr::coalesce(.data$out_label, .data$level)
+    ) |>
+    # remove the surplus additional columns
+    dplyr::select(!dplyr::any_of(c("df_to", "out_label")))
 }
 
 #' Get a tibble of model variables and levels
@@ -638,7 +862,11 @@ prepare_df_for_plotting <- function(df) {
           # upper CI
           '{p_label})' # probability
         )
-      )
+      ),
+
+      # ensure the level variable is a factor to ensure plots have the
+      # correct order
+      level = .data$level |> forcats::as_factor()
     ) |>
     # position outcome rate following outcome
     dplyr::relocate("outcome_rate", .after = "outcome")
@@ -874,6 +1102,23 @@ anonymise_count_values <- function(var) {
   return(vec_return)
 }
 
+get_class_for_ordered_factors <- function() {
+  # create a vector of ordered factors
+  of_example <-
+    sample(0:5, size = 1000, replace = TRUE) |>
+    factor(
+      levels = c(0, 1, 2, 3, 4, 5),
+      labels = c("a", "b", "c", "d", "e", "f"),
+      ordered = TRUE
+    )
+
+  # how is it described
+  of_class <- paste(class(of_example), collapse = " ")
+
+  # return
+  return(of_class)
+}
+
 ## validation funcs -----
 #' Validate confidence level input
 #'
@@ -1059,7 +1304,7 @@ get_summary_table <- function(
     model_or <-
       glm_model_results |>
       # use broom to get or estimates but WITHOUT confidence intervals
-      broom::tidy(exponentiate = T, conf.int = F) |>
+      broom::tidy(exponentiate = TRUE, conf.int = FALSE) |>
       # add in confidence interval approximation using `stats::confint.default()`
       dplyr::left_join(
         y = glm_model_results |>
@@ -1072,12 +1317,14 @@ get_summary_table <- function(
   } else {
     # use the correct method to estimate the confidence interval
     model_or <- glm_model_results |>
-      broom::tidy(exponentiate = T, conf.int = T, conf.level = conf_level)
+      broom::tidy(exponentiate = TRUE, conf.int = TRUE, conf.level = conf_level)
   }
 
   # add the odds ratio and CIs to the summary dataframe
   df <- df |>
-    dplyr::left_join(y = model_or, by = base::c('term'))
+    dplyr::left_join(y = model_or, by = base::c('term')) |>
+    # format as factor
+    dplyr::mutate(term = .data$term |> forcats::as_factor())
 
   # use variable labels
   df <- use_var_labels(df = df, lr = glm_model_results)
@@ -1087,6 +1334,68 @@ get_summary_table <- function(
 
   # return the df
   return(df)
+}
+
+#' Get a table summarising the model results
+#'
+#' @description
+#' Get a summary table showing the number of rows in each group and of those
+#' who and a 'success' outcome. Then combine with details such as the OR
+#' estimate and confidence interval.
+#'
+#' @details
+#' This function calls the `get_summary_table()` in a background process and
+#' displays a spinner in the console to notify the user that the system is
+#' working.
+#'
+#' @param glm_model_results Results from a binomial Generalised Linear Model (GLM), as produced by [stats::glm()].
+#' @param conf_level Numeric between 0.001 and 0.999 (default = 0.95). The confidence level to use when setting the confidence interval, most commonly will be 0.95 or 0.99 but can be set otherwise.
+#' @param confint_fast_estimate Boolean (default = `FALSE`) indicating whether to use a faster estimate of the confidence interval. Note: this assumes normally distributed data, which may not be suitable for your data.
+#'
+#' @returns Tibble providing a summary of the logistic regression model.
+#'
+#' @noRd
+get_summary_table_with_spinner <- function(
+  glm_model_results,
+  conf_level = 0.95,
+  confint_fast_estimate = FALSE
+) {
+  # instantiate a spinner
+  spinner <-
+    cli::make_spinner(
+      which = "simpleDotsScrolling",
+      template = "Working {spin}"
+    )
+
+  # get a summary table for the model
+  p <-
+    callr::r_bg(
+      package = "plotor",
+      func = function(glm_model_results, conf_level, confint_fast_estimate) {
+        get_summary_table(
+          glm_model_results = glm_model_results,
+          conf_level = conf_level,
+          confint_fast_estimate = confint_fast_estimate
+        )
+      },
+      args = list(
+        glm_model_results = glm_model_results,
+        conf_level = conf_level,
+        confint_fast_estimate = confint_fast_estimate
+      )
+    )
+
+  # periodically update the spinner so long as the process is active
+  while (p$is_alive()) {
+    spinner$spin()
+    Sys.sleep(0.1) # the spinner is automatically throttled, so this setting isn't crucial
+  }
+
+  # finish the spinner
+  spinner$finish()
+
+  # return the result and raise erorrs if any occurred in the background
+  p$get_result()
 }
 
 #' Output tibble as `gt`
@@ -1220,21 +1529,15 @@ output_gt <- function(df, conf_level, title = "Odds Ratio Summary Table") {
       ))
     ) |>
     # add an OR plot to visualise the results
-    # gtExtras::gt_plt_conf_int(
-    #   column = 'plot_or',
-    #   ci_columns = c('plot_ci_l', 'plot_ci_u'),
-    #   ref_line = 0,
-    #   text_size = 0
-    # ) |>
-    gt_plt_conf_int_new(
-      column = 'plot_or',
-      ci_columns = c('plot_ci_l', 'plot_ci_u'),
+    gtExtras::gt_plt_conf_int(
+      column = "plot_or",
+      ci_columns = c("plot_ci_l", "plot_ci_u"),
       ref_line = 0,
       text_size = 0
     ) |>
     gt::cols_align(
       columns = .data$plot_or,
-      align = 'center'
+      align = "center"
     )
 }
 
@@ -1605,11 +1908,19 @@ get_univariable_summary_table <- function(
           )
 
         # summarise the model
-        df_summary <- get_summary_table(
-          glm_model_results = uni_glm,
-          conf_level = conf_level,
-          confint_fast_estimate = confint_fast_estimate
-        )
+        if (use_spinner()) {
+          df_summary <- get_summary_table_with_spinner(
+            glm_model_results = uni_glm,
+            conf_level = conf_level,
+            confint_fast_estimate = confint_fast_estimate
+          )
+        } else {
+          df_summary <- get_summary_table(
+            glm_model_results = uni_glm,
+            conf_level = conf_level,
+            confint_fast_estimate = confint_fast_estimate
+          )
+        }
 
         # return the result for collation by {purrr}
         return(df_summary)
@@ -1660,12 +1971,21 @@ get_combined_summaries <- function(
   }
 
   # get a multivariable summary
-  mv_summary <-
-    get_summary_table(
-      glm_model_results = model,
-      conf_level = conf_level,
-      confint_fast_estimate = confint_fast_estimate
-    )
+  if (use_spinner()) {
+    mv_summary <-
+      get_summary_table_with_spinner(
+        glm_model_results = model,
+        conf_level = conf_level,
+        confint_fast_estimate = confint_fast_estimate
+      )
+  } else {
+    mv_summary <-
+      get_summary_table(
+        glm_model_results = model,
+        conf_level = conf_level,
+        confint_fast_estimate = confint_fast_estimate
+      )
+  }
 
   # get a univariable summary
   uv_summary <-
@@ -1769,11 +2089,19 @@ prepare_multivariable_table_object <- function(
   anonymise_counts = FALSE
 ) {
   # get summary of rows and estimate OR
-  df <- get_summary_table(
-    glm_model_results = glm_model_results,
-    conf_level = conf_level,
-    confint_fast_estimate = confint_fast_estimate
-  )
+  if (use_spinner()) {
+    df <- get_summary_table_with_spinner(
+      glm_model_results = glm_model_results,
+      conf_level = conf_level,
+      confint_fast_estimate = confint_fast_estimate
+    )
+  } else {
+    df <- get_summary_table(
+      glm_model_results = glm_model_results,
+      conf_level = conf_level,
+      confint_fast_estimate = confint_fast_estimate
+    )
+  }
 
   # get the outcome variable
   str_outcome <- get_outcome_variable_name(model = glm_model_results)
@@ -1934,6 +2262,7 @@ prepare_combined_table_object <- function(
 #'
 #' @param glm Results from a binomial Generalised Linear Model (GLM), as produced by [stats::glm()].
 #' @param details Boolean: TRUE = additional details will be printed to the Console if this assumption fails, FALSE = additional details will be suppressed.
+#' @param confint_fast_estimate Boolean: TRUE = fast estimate for confidence interval, FALSE = default method for confidence interval calculation
 #'
 #' @returns Named list indicating the results of each assumption
 #' @noRd
@@ -1959,7 +2288,12 @@ check_assumptions <- function(
 
     assume_sample_size = assumption_sample_size(glm = glm, details = details),
 
-    assume_linearity = assumption_linearity(glm = glm, details = details)
+    assume_linearity = assumption_linearity(glm = glm, details = details),
+
+    assume_no_extreme = assumption_no_extreme_values(
+      glm = glm,
+      details = details
+    )
   )
 
   # aborting assumptions
@@ -1968,6 +2302,86 @@ check_assumptions <- function(
   }
 
   return(list_return)
+}
+
+#' Check assumptions with spinner
+#'
+#' Checks whether the supplied `glm` model satisfies assumptions of a binary
+#' logistic regression model.
+#'
+#' The assumptions tested are:
+#' * the outcome variable is binary encoded,
+#' * there is no multicollinearity among the predictor variables,
+#' * the outcome variable is not separated by any of the predictor variables,
+#' * the sample size is sufficient to avoid biased estimates
+#'
+#' @param glm Results from a binomial Generalised Linear Model (GLM), as produced by [stats::glm()].
+#' @param details Boolean: TRUE = additional details will be printed to the Console if this assumption fails, FALSE = additional details will be suppressed.
+#' @param confint_fast_estimate Boolean: TRUE = fast estimate for confidence interval, FALSE = default method for confidence interval calculation
+#'
+#' @returns Named list indicating the results of each assumption
+#' @noRd
+check_assumptions_with_spinner <- function(
+  glm,
+  details = FALSE,
+  confint_fast_estimate = FALSE
+) {
+  # identify whether we want to disable the spinner (e.g. non-interactive sessions)
+  spinner_allowed <- use_spinner()
+
+  # gather environmental information
+  env <- c(
+    Sys.getenv(),
+    PLOTOR_FORCE_SPINNER = if (spinner_allowed) "1" else "0"
+  )
+
+  # get a summary table for the model
+  list_return <-
+    callr::r_bg(
+      package = "plotor",
+      env = env,
+      func = function(glm, details, confint_fast_estimate) {
+        # configure cli based on env
+        if (
+          !tolower(Sys.getenv("PLOTOR_FORCE_SPINNER", unset = "0")) %in%
+            c("1", "true", "t")
+        ) {
+          options(cli.dynamic = FALSE)
+        }
+        check_assumptions(
+          glm = glm,
+          details = details,
+          confint_fast_estimate = confint_fast_estimate
+        )
+      },
+      args = list(
+        glm = glm,
+        details = details,
+        confint_fast_estimate = confint_fast_estimate
+      )
+    )
+
+  if (spinner_allowed) {
+    # make sure a spinner is shown
+    spinner <-
+      cli::make_spinner(
+        which = "simpleDotsScrolling",
+        template = "Checking assumptions {spin}"
+      )
+    while (list_return$is_alive()) {
+      spinner$spin()
+      Sys.sleep(0.1)
+    }
+    spinner$finish()
+  } else {
+    # don't show the spinner
+    while (list_return$is_alive()) {
+      Sys.sleep(0.1)
+    }
+  }
+
+  # return the result and raise errors if any occurred in the background
+  list_return$get_result()
 }
 
 
@@ -2410,12 +2824,14 @@ assumption_no_separation_fast <- function(glm, details = FALSE) {
             (range[[1, 2]] <= range[[2, 3]]) &
             (range[[2, 2]] <= range[[1, 3]])
         } else {
-          # a factor variable:
+          # convert string to a symbol
+          .pred_sym <- rlang::sym(.pred)
+
           # do any levels result in zero outcomes?
           result <-
             df |>
             # count the outcomes by the predictor
-            dplyr::count({{ outcome }}, {{ .pred }}) |>
+            dplyr::count({{ outcome }}, !!.pred_sym) |>
             # put the outcome as columns
             tidyr::pivot_wider(
               names_from = {{ outcome }},
@@ -2423,9 +2839,12 @@ assumption_no_separation_fast <- function(glm, details = FALSE) {
               values_fill = 0
             ) |>
             dplyr::rename("n0" = 2, "n1" = 3) |>
-            dplyr::filter("n0" == 0 | "n1" == 0) |>
-            dplyr::summarise(separated = dplyr::n() > 0) |>
-            dplyr::pull("separated")
+            dplyr::filter(.data$n0 == 0 | .data$n1 == 0)
+
+          # if result contains any rows it means there is separation
+          # if there are no rows then separation isn't detected and the
+          # assumption holds
+          result <- ifelse(test = result |> nrow() == 0, yes = TRUE, no = FALSE)
         }
 
         # return the result
@@ -2438,7 +2857,7 @@ assumption_no_separation_fast <- function(glm, details = FALSE) {
     )
 
   # consolidate the results to a single TRUE / FALSE
-  result <- !results$separation |> any(na.rm = TRUE)
+  result <- results$separation |> all(na.rm = TRUE)
 
   # list predictors where there are signs of separation
   var_separation <- results |>
@@ -2550,21 +2969,27 @@ assumption_sample_size <- function(
   result_factors <- TRUE
 
   # get the name of the outcome variable
-  temp_outcome_var <- glm$terms[[2]]
+  temp_outcome_var <- glm$terms[[2]] |> as.character()
 
   # get a vector of predictor variables which are factors
   predictor_factors <-
-    # get the class of each term
-    sapply(glm$model, class) |>
-    # convert to a tibble and name terms as 'predictor'
-    tibble::as_tibble(rownames = c("predictor")) |>
+    # get the class of each term in the model
+    purrr::map(
+      .x = glm$model,
+      .f = \(.x) paste(class(.x), collapse = " ")
+    ) |>
+    # convert to a tibble
+    utils::stack() |>
+    tibble::as_tibble() |>
     # remove the outcome and keep only predictors formatted as factors
     dplyr::filter(
-      .data$value == "factor",
-      .data$predictor != temp_outcome_var
+      # exclude the outcome
+      .data$ind != temp_outcome_var,
+      # keep only factors
+      .data$values %in% c("factor", "ordered factor")
     ) |>
     # pull a list of predictors
-    dplyr::pull(.data$predictor)
+    dplyr::pull(.data$ind)
 
   # only proceed if there is at least one factor predictor
   if (length(predictor_factors) > 0) {
@@ -2587,32 +3012,27 @@ assumption_sample_size <- function(
           levels(.df$outcome)[2] <- ".event"
 
           # count the number of observations in each level of predictor
-          df <-
+          df_return <-
             .df |>
-            # tidyr::complete(outcome) |>
+            # need to cast the predictor as string to avoid issues in cases
+            # where predictors include both factors and ordered factors
+            dplyr::rename(predictor_level = {{ .var }}) |>
+            dplyr::mutate(
+              predictor_level = .data$predictor_level |> as.character()
+            ) |>
             # count rows by the outcome for each predictor variable (.var) level
             dplyr::summarise(
-              predictor = {{ .var }},
+              predictor = {{ .var }} |> as.character(),
               n = dplyr::n(),
-              .by = c("outcome", {{ .var }})
+              .by = c("outcome", "predictor_level")
             ) |>
-            # rename var to level and move predictor to start of tibble
-            dplyr::rename(level = {{ .var }}) |>
-            dplyr::relocate("predictor", .before = "level") |>
             # sort by count (in case this needs displaying)
             dplyr::arrange(dplyr::desc(.data$n)) |>
             # pivot outcomes to their own columns
             tidyr::pivot_wider(
               names_from = dplyr::any_of("outcome"),
-              values_from = "n"
-            ) |>
-            # replace any NA values with zeroes (in cases of complete separation)
-            dplyr::mutate(
-              dplyr::across(
-                # .cols = c(".event", ".nonevent"),
-                .cols = dplyr::any_of(c(".event", ".nonevent")),
-                .fns = ~ dplyr::coalesce(.x, 0L)
-              )
+              values_from = dplyr::any_of("n"),
+              values_fill = 0 # in cases of complete separation
             )
         }
       )
@@ -2683,7 +3103,6 @@ assumption_sample_size <- function(
       "{nrow(predictor_factor_level_too_small)} predictor variable level{?s} in your model {?has/have} fewer than {.val {min_events_per_predictor}} events and / or non-events:",
       wrap = TRUE
     )
-    print(predictor_factor_level_too_small)
   }
 
   # provide general advice on this assumption
@@ -2762,8 +3181,10 @@ assumption_linearity <- function(glm, details = FALSE, p_val_threshold = 0.05) {
     interaction_terms <-
       purrr::map(
         .x = predictors_continuous,
-        # NB, using log1p in case there are any zeroes
-        .f = \(.x) glue::glue("I({.x} * log1p({.x}))")
+        # NB, using asinh() as an alternative to log() or log1p() as it is
+        # defined for all real x and behaves like log for large |x| while
+        # staying finite near -1
+        .f = \(.x) glue::glue("I({.x} * asinh({.x}))")
       )
 
     # convert the list to a vector
@@ -2875,4 +3296,483 @@ assumption_linearity <- function(glm, details = FALSE, p_val_threshold = 0.05) {
 
   # return the result
   return(result)
+}
+
+#' Test for influential observations in logistic regression
+#'
+#' @description
+#' Performs a diagnostic test to identify potentially influential observations
+#' in a binomial logistic regression model. The function uses multiple
+#' statistical criteria to minimise false positives.
+#'
+#' @details
+#' Influential observations can substantially distort model estimates,
+#' particularly in logistic regression where the non-linear link function makes
+#' the model sensitive to outliers. This function assesses potential
+#' influential points using three key metrics:
+#' 1. **Cook's distance**: measures the overall influence of an observation
+#' 2. **Leverage**: assesses the extremity of predictor variable combinations
+#' 3. **Standardised residuals**: evaluates the deviation of observations from the model
+#'
+#' The test is intentionally conservative to minimise the number of false
+#' positive reports, using thresholds derived from:
+#' - F-distribution quantile for Cook's distance
+#' - Bonferroni-like correction for leverage
+#' - Reduced standard deviation threshold for residuals
+#'
+#' @param glm A binomial logistic regression model created using [stats::glm()]
+#' @param details Logical. If `TRUE` prints detailed information about potentially influential observations using {cli} formatting
+#'
+#' @returns A logical value:
+#' - `TRUE` if no influential observations are detected
+#' - `FALSE` if potentially influential observations are found
+#'
+#' @section Warnings:
+#' - This diagnostic is not definitive and should not be the sole method for
+#' identifying problematic observations
+#' - Always combine with domain expertise and visual inspection of the data
+#' - Requires careful interpretation by a domain expert
+#'
+#' @section Thresholds:
+#' The function uses the following conservative thresholds:
+#' - Cook's Distance: based on F-distribution quantile
+#' - Leverage: `(2 * number of predictors) / sample size`
+#' - Standardised residuals: absolute value < 2.5
+#'
+#' @examples
+#' \dontrun{
+#' # Basic usage with a logistic regression model
+#' model <- stats::glm(
+#'   formula = outcome ~ predictor1 + predictor2,
+#'   family = "binomial",
+#'   data = your_data
+#' )
+#'
+#' # check for influential observations
+#' plotor:::assumption_no_extreme_values(model)
+#'
+#' # get detailed output about potential influential observations
+#' plotor:::assumption_no_extreme_values(glm = model, details = TRUE)
+#' }
+#'
+#' @noRd
+assumption_no_extreme_values <- function(glm, details = FALSE) {
+  # compute model diagnostics with robust methods
+  model_diag <- glm |> broom::augment()
+
+  # model dimensions
+  mod_matrix <- stats::model.matrix(glm)
+  mod_ncol <- ncol(mod_matrix)
+  mod_nrow <- nrow(mod_matrix)
+
+  # define thresholds
+  # cook's distance
+  # cooks_cutoff <- 4 / mod_nrow # this is a standard rule of thumb
+  cooks_theory <- 4 / max(mod_nrow - mod_ncol, 10) # avoid division by tiny df
+  cooks_cutoff <- max(cooks_theory, 1e-3) # absolute floor to avoid ~0 cutoffs
+  cooks_quantile <- stats::quantile(
+    model_diag$.cooksd,
+    probs = 0.999,
+    na.rm = TRUE
+  )
+
+  # leverage
+  leverage_median <- stats::median(model_diag$.hat, na.rm = TRUE)
+  leverage_theory <- (mod_ncol + 1) / mod_nrow
+  # choose the larger of the two cut-offs, with a floor of 0.02
+  leverage_cutoff <- max(2.5 * leverage_median, 2.5 * leverage_theory, 0.02)
+
+  # standardised Pearson's residual
+  resid_abs <- abs(model_diag$.std.resid)
+  resid_cutoff_abs <- 3
+  resid_quantile <- stats::quantile(resid_abs, probs = 0.999, na.rm = TRUE)
+  resid_cutoff_final <- max(resid_cutoff_abs, resid_quantile)
+
+  # define multiple threshold critieria
+  model_diag <-
+    model_diag |>
+    dplyr::mutate(
+      # convert standardised residuals to absolute values
+      abs_std_resid = abs(.data$.std.resid),
+
+      # add in thresholds (for reference)
+      thr_cooks_cutoff = cooks_cutoff,
+      thr_cooks_quantile = cooks_quantile,
+      thr_leverage_cutoff = leverage_cutoff,
+      thr_resid_cutoff_final = resid_cutoff_final,
+      thr_resid_quantile = resid_quantile,
+
+      # criteria
+      cooks_criterion = (.data$.cooksd > cooks_cutoff) &
+        (.data$.cooksd > cooks_quantile),
+      leverage_criterion = (.data$.hat > leverage_cutoff),
+      resid_criterion = (.data$abs_std_resid > resid_cutoff_final) |
+        (.data$abs_std_resid > resid_quantile)
+    )
+
+  # identify potentially influential observations
+  influential_obs <-
+    model_diag |>
+    dplyr::mutate(
+      # require at least 2 criteria to be true
+      criteria_count = dplyr::select(
+        .data = model_diag,
+        dplyr::ends_with("_criterion")
+      ) |>
+        rowSums()
+    ) |>
+    dplyr::filter(.data$criteria_count >= 2)
+
+  # debugging ---
+  # test_model_diag <<- model_diag |>
+  #   dplyr::arrange(
+  #     dplyr::desc(cooks_criterion),
+  #     dplyr::desc(leverage_criterion),
+  #     dplyr::desc(resid_criterion)
+  # test_inf_obs <<- influential_obs
+  # debugging end ---
+
+  # assumption details ---
+
+  # are all observations within bounds?
+  result <- nrow(influential_obs) == 0
+
+  # context details ---
+  # provide some summary statistics
+  if (!result) {
+    summary_stats <-
+      influential_obs |>
+      dplyr::summarise(
+        total_obs = dplyr::n(),
+        max_cooks = max(.data$.cooksd, na.rm = TRUE),
+        max_leverage = max(.data$.hat, na.rm = TRUE),
+        max_stdresid = max(abs(.data$.std.resid), na.rm = TRUE)
+      )
+
+    # format these for display
+    lbl_n <- prettyunits::pretty_num(summary_stats$total_obs)
+    lbl_max_cooks <- prettyunits::pretty_round(
+      x = summary_stats$max_cooks,
+      digits = 4
+    )
+    lbl_max_hat <- prettyunits::pretty_round(
+      x = summary_stats$max_leverage,
+      digits = 4
+    )
+    lbl_max_stdresid <- prettyunits::pretty_round(
+      x = summary_stats$max_stdresid,
+      digits = 4
+    )
+  }
+
+  # alert details ---
+  # alert the user if this assumption is not held
+  if (!result) {
+    cli::cli_warn(
+      "Signs of influential observations detected in {lbl_n} of your observations."
+    )
+  }
+
+  # provide additional details if requested
+  if (!result & details) {
+    cli::cli_h1("No influential observations assumption")
+    cli::cli_alert_warning(
+      "Signs of influential observations detected in {lbl_n}rows of your model's data."
+    )
+    # highlight key metrics
+    cli::cli_ul()
+    cli::cli_li(
+      "{.emph Observations flagged:} {lbl_n} (each meeting at least two diagnostic criteria)"
+    )
+    cli::cli_li("{.emph Maximum observed Cook's Distance:} {lbl_max_cooks}")
+    cli::cli_li("{.emph Maximum observed Leverage:} {lbl_max_hat}")
+    cli::cli_li(
+      "{.emph Maximum observed Absolute Standardised Residual:} {lbl_max_stdresid}"
+    )
+    cli::cli_end()
+
+    # provide general advice on this assumption
+    cli::cli_h3("About")
+    cli::cli_alert_info(
+      "Influential observations in logistic regression can disproportionately skew model estimates, dramatically altering the decision boundary and coefficient estimates. Due to the non-linear nature of logistic regression, even a single observation can substantially change the probability predictions, potentially leading to misleading conclusions about predictor effects and compromising the model's reliability and generalisability",
+      wrap = TRUE
+    )
+    cli::cli_alert_info(
+      "This diagnostic assessed your logistic regression model by simultaneously examining three key influence metrics: 
+      1) Cook's distance (measuring overall observation impact), 
+      2) leverage (quantifying an observation's distance from the data centre), and 
+      3) standardised residuals (indicating how unusual an observation is relative to the model). By requiring observations to meet at least two diagnostic criteria, the test provides a conservative approach to identifying points that could substantially distort your model's estimates and predictive performance.",
+      wrap = TRUE
+    )
+  }
+
+  # return the result
+  return(result)
+}
+
+# predict processing funcs ----------------------------------------------------
+#' Predict processing time
+#'
+#' @description
+#' Predict the upper bound of processing time (in milliseconds) required to
+#' compute a model summary table. The prediction is the upper prediction
+#' interval from a pre-trained linear model and is returned on the original
+#' milliseconds scale (the stored model predicts (log(milliseconds) and the
+#' result is exponentiated).
+#'
+#' @details
+#' A pre-trained linear regression model (internal data) is used to estimate
+#' processing time. The model expects these numeric predictors:
+#' - `n_seq` - total number of rows in the model data
+#' - `n_fac_seq` - number of factor predictor variables
+#' - `n_fac_levels_seq` - maximum number of levels among factor predictors
+#' - `n_num_seq` - number of numeric predictor variables
+#'
+#' The function returns the exponentiated upper bound of the prediction
+#' interval at the confidence level `pred_level`.
+#'
+#' @note
+#' Uses function uses an internal pre-trained model `model_time_taken` that is
+#' stored in R/sysdata.rda and made available in the package namespace.
+#' `model_time_taken` predicts log(milliseconds); this function exponentiates
+#' the upper prediction bound to return milliseconds.
+#'
+#' @param glm A fitted logistic regression model (a result of stats::glm). Preferably the model retains its model frame (i.e. was fit with model = TRUE) so row count can be determined.
+#' @param pred_level Numeric scalar in (0, 1). Confidence level for the prediction interval. Default: 0.95
+#'
+#' @returns Integer. Predicted milliseconds to run the process (non-negative).
+#'
+#' @examples
+#' \dontrun{
+#'   # Uses internal `model_time_taken` included in the package.
+#'   predict_process_time(glm_model, pred_level = 0.95)
+#' }
+#'
+#' @seealso Internal data: `model_time_taken` (pre-trained linear model saved in R/sysdata.rda)
+#'
+#' @noRd
+predict_process_time <- function(glm, pred_level = 0.95) {
+  # validate inputs
+  stopifnot(is.numeric(pred_level), pred_level > 0, pred_level < 1)
+
+  # get a tibble describing the predictor variables and
+  # levels of factor predictors
+  glm_levels <- get_model_variables_and_levels(model_results = glm)
+
+  # gather measurement for use in the predictor model
+  # row count
+  n <- glm$model |> nrow()
+
+  # number of numeric predictors
+  n_num <-
+    glm_levels |>
+    dplyr::filter(is.na(.data$level)) |>
+    dplyr::summarise(rows = dplyr::n()) |>
+    dplyr::pull("rows")
+
+  # number of factor predictors
+  n_fac <-
+    glm_levels |>
+    dplyr::filter(!is.na(.data$level)) |>
+    dplyr::distinct(.data$variable) |>
+    dplyr::summarise(rows = dplyr::n()) |>
+    dplyr::pull("rows")
+
+  # maximum number of levels for factors predictors
+  # filter the df for any potential factor predictors
+  df_n_fac_levels <-
+    glm_levels |>
+    dplyr::filter(!is.na(.data$level))
+
+  # determine the maximum number of levels, or, if there are no
+  # factor variables then return zero
+  n_fac_levels <-
+    if (df_n_fac_levels |> nrow() == 0L) {
+      0L
+    } else {
+      df_n_fac_levels |>
+        dplyr::summarise(rows = dplyr::n(), .by = "variable") |>
+        dplyr::summarise(max_rows = max(.data$rows)) |>
+        dplyr::pull(.data$max_rows)
+    }
+
+  # estimate the processing time in milliseconds
+  predicted_ms <-
+    stats::predict(
+      object = model_time_taken, # pre-trained model
+      newdata = tibble::tibble(
+        n_seq = n,
+        n_fac_seq = n_fac,
+        n_fac_levels_seq = n_fac_levels,
+        n_num_seq = n_num
+      ),
+      interval = "prediction",
+      level = pred_level
+    ) |>
+    exp() |>
+    max() |>
+    floor()
+
+  # return the result
+  return(predicted_ms |> as.integer())
+}
+
+#' Double-check the setting for `confint_fast_estimate`
+#'
+#' @description
+#' Check whether the user's current setting for `confint_fast_estimate`
+#' should be changed to a faster (approximate) method for confidence intervals
+#' based on estimated processing time. In interactive sessions the user may be
+#' prompted to switch to the faster option when the estimated run time is long.
+#'
+#' @details
+#' The function uses `predict_process_time()`, which relies on the package's
+#' internal pre-trained model `model_time_taken`, to estimate the processing
+#' time for computing confidence intervals. If the estimate exceeds thresholds
+#' provided by the caller, the function will:
+#' - run silently to keep the supplied value in non-interactive mode,
+#' - in interactive mode, notify the user when the estimate surpasses
+#'   `inform_threshold`, and prompt to switch to the faster method when it
+#'   exceeds `recommend_threshold`.
+#'
+#' The function always returns a single logical scalar suitable for use as a
+#' value for `confint_fast_estimate`.
+#'
+#' @param glm A fitted logistic regression model (result of stats::glm). Ideally the model retains its model frame (model = TRUE) so the helper functions can determine row counts.
+#' @param confint_fast_estimate Logical scalar. Current value for the `confint_fast_estimate` parameter. If TRUE this function returns immediately.
+#' @param inform_threshold Integer scalar (milliseconds). If the estimated run time exceeds this value, the user will be informed that the process may take a while. Default: 5000 (5 seconds).
+#' @param recommend_threshold Integer scalar (milliseconds). If the estimated run time exceeds this value, the user will be warned and - in an interactive session - prompted to switch `confint_fast_estimate` to TRUE. Default 60000 (60 seconds).
+#'
+#' @return Logical scalar. The value to use for `confint_fast_estimate` (either the original value or TRUE if the user chose to switch).
+#'
+#' @examples
+#' \dontrun{
+#'   # In an interactive session this may prompt the user if the estimated
+#'   # run time is long
+#'   result <- double_check_confint_fast_estimate(
+#'     glm_model,
+#'     confint_fast_estimate = FALSE
+#'   )
+#' }
+#'
+#' @note
+#' - Thresholds are in milliseconds. Callers may override the defaults to
+#' change when notices / prompts occur.
+#' - In non-interactive usage (e.g., scripts, R CMD check) the function never
+#' prompts and simply returns the supplied `confint_fast_estimate`.
+#' - The function performs basic validation of inputs and will return the supplied value if it cannot obtain a finite time estimate.
+#'
+#'
+#' @noRd
+double_check_confint_fast_estimate <- function(
+  glm,
+  confint_fast_estimate,
+  inform_threshold = 5e3L,
+  recommend_threshold = 6e4L
+) {
+  # validate inputs
+  if (
+    !is.logical(confint_fast_estimate) || length(confint_fast_estimate) != 1
+  ) {
+    cli::cli_abort(
+      "{.var confint_fast_estimate} must be a single logical value"
+    )
+  }
+  if (!is.numeric(inform_threshold) || inform_threshold < 0) {
+    cli::cli_abort("{.var inform_threshold} must be a non-negative integer")
+  }
+  if (!is.numeric(recommend_threshold) || recommend_threshold < 0) {
+    cli::cli_abort("{.var recommend_threshold} must be a non-negative integer.")
+  }
+  if (recommend_threshold < inform_threshold) {
+    cli::cli_alert(
+      "{.var recommend_threshold} should be larger than {.var inform_threshold}"
+    )
+  }
+
+  # if already set to TRUE, then just return the value
+  # there is no benefit from continuing with this function
+  if (confint_fast_estimate) {
+    return(confint_fast_estimate)
+  }
+
+  # `confint_fast_estimate` is FALSE:
+  # predict the processing time
+  predict_ms <- predict_process_time(glm = glm)
+  predict_desc <- (ceiling(predict_ms / 6e4) * 6e4) |> prettyunits::pretty_ms()
+
+  # decide what to do next
+  if (!interactive()) {
+    # non-interactive: go exactly with the called request
+    # don't want to second-guess the user
+    return(confint_fast_estimate)
+  } else {
+    if (predict_ms <= inform_threshold) {
+      # this will calculate quickly enough; continue
+      return(confint_fast_estimate)
+    } else if (predict_ms <= recommend_threshold) {
+      # display a general notice
+      cli::cli_alert_warning("Estimated run time: {predict_desc}")
+      return(confint_fast_estimate)
+    } else {
+      # expected to take longer than upper threshold - alert the user
+      cli::cli_alert_danger("Estimated run time: {predict_desc}")
+      cli::cli_text(
+        "Recommend using {.code confint_fast_estimate = TRUE} for a faster (approximate) method of calculating confidence intervals (CI).
+        "
+      )
+      # set up some choices
+      choices <- c(
+        "Switch to faster CI estimate (recommended)",
+        "Keep current (run full CI; may take a long time)"
+      )
+      # ask the user
+      choice <- utils::menu(
+        choices,
+        title = "Switch to faster CI estimate now?"
+      )
+      # handle the response
+      if (choice == 1) {
+        return(TRUE)
+      } else {
+        return(confint_fast_estimate)
+      }
+    }
+  }
+}
+
+#' Determine whether to use a spinner in output
+#'
+#' @description
+#' This helper function decides whether a spinner should be displayed during
+#' processing. The behaviour can be overridden by setting the environment
+#' variable `PLOTOR_FORCE_SPINNER`. If this variable is set to `"true"` or
+#' `"t"` (case-insensitive), the function returns `TRUE`; any other value
+#' returns `FALSE`.
+#'
+#' If no override is provided, the function enables the spinner only when the
+#' session is interactive and not running under {testthat} (i.e., when the
+#' `TESTTHAT` environment variable is unset or empty).
+#'
+#' @return A logical value indicating whether a spinner should be used.
+#'
+#' @examples
+#' # Use default behvaiour
+#' use_spinner()
+#'
+#' # Force spinner 'on'
+#' Sys.setenv(PLOTOR_FORCE_SPINNER = "true")
+#' use_spinner()
+#'
+#' # Force spinner 'off'
+#' Sys.setenv(PLOTOR_FORCE_SPINNER = "0")
+#' use_spinner()
+#'
+#' @noRd
+use_spinner <- function() {
+  override <- Sys.getenv("PLOTOR_FORCE_SPINNER", unset = NA)
+  if (!is.na(override)) {
+    return(tolower(override) %in% c("1", "true", "t"))
+  }
+  interactive() && identical(Sys.getenv("TESTTHAT"), "")
 }

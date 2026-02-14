@@ -44,13 +44,13 @@ get_df_infert <- function() {
     datasets::infert |>
     dplyr::mutate(
       case = case |>
-        dplyr::case_match(1 ~ 'Case', 0 ~ 'Control') |>
+        dplyr::recode_values(1 ~ "Case", 0 ~ "Control") |>
         forcats::fct(levels = c('Control', 'Case')),
       induced = induced |>
-        dplyr::case_match(0 ~ '0', 1 ~ '1', 2 ~ '2 or more') |>
+        dplyr::recode_values(0 ~ "0", 1 ~ "1", 2 ~ "2 or more") |>
         forcats::fct(levels = c('0', '1', '2 or more')),
       spontaneous = spontaneous |>
-        dplyr::case_match(0 ~ '0', 1 ~ '1', 2 ~ '2 or more') |>
+        dplyr::recode_values(0 ~ "0", 1 ~ "1", 2 ~ "2 or more") |>
         forcats::fct(levels = c('0', '1', '2 or more'))
     )
 
@@ -85,7 +85,7 @@ get_df_streptb <- function() {
         forcats::fct(levels = c('1_Good', '2_Fair', '3_Poor')),
       baseline_temp = baseline_temp |>
         as.character() |>
-        dplyr::case_match(
+        dplyr::recode_values(
           '1_<=98.9F/37.2C' ~ '<= 37.2C',
           '2_99-99.9F/37.3-37.7C' ~ '37.3 - 37.7C',
           '2_99-99.9F/37.3-37.7C/37.3-37.7C' ~ '37.3 - 37.7C',
@@ -98,7 +98,7 @@ get_df_streptb <- function() {
         ), #|>
       #forcats::fct_inorder(ordered = TRUE),
       baseline_esr = baseline_esr |>
-        dplyr::case_match(
+        dplyr::recode_values(
           '2_11-20' ~ '11-20',
           '3_21-50' ~ '21-50',
           '4_51+' ~ '51+',
@@ -141,30 +141,30 @@ get_df_streptb <- function() {
   return(df)
 }
 
-get_df_diabetes <- function() {
-  cli::cli_alert_warning("This dataset does not play well with CRAN.")
-  df <-
-    medicaldata::diabetes |>
-    janitor::clean_names()
+# get_df_diabetes <- function() {
+#   cli::cli_alert_warning("This dataset does not play well with CRAN.")
+#   df <-
+#     medicaldata::diabetes |>
+#     janitor::clean_names()
 
-  # create a list of variable = labels
-  var_labels <- list(
-    pregnancy_num = 'Number of pregnancies',
-    glucose_mg_dl = 'Plasma glucose concentration (mg per dl)',
-    dbp_mm_hg = 'Diastolic blood pressure (mmHg)',
-    triceps_mm = 'Triceps skin fold thickness (mm)',
-    insulin_microiu_ml = 'Serum insulin (microIU per ml)',
-    bmi = 'Body mass index',
-    pedigree = 'Diabetes pedigree score',
-    age = 'Age (years)',
-    diabetes_5y = 'Diagnosis of diabetes in following 5 years'
-  )
+#   # create a list of variable = labels
+#   var_labels <- list(
+#     pregnancy_num = 'Number of pregnancies',
+#     glucose_mg_dl = 'Plasma glucose concentration (mg per dl)',
+#     dbp_mm_hg = 'Diastolic blood pressure (mmHg)',
+#     triceps_mm = 'Triceps skin fold thickness (mm)',
+#     insulin_microiu_ml = 'Serum insulin (microIU per ml)',
+#     bmi = 'Body mass index',
+#     pedigree = 'Diabetes pedigree score',
+#     age = 'Age (years)',
+#     diabetes_5y = 'Diagnosis of diabetes in following 5 years'
+#   )
 
-  # apply the labels
-  labelled::var_label(df) <- var_labels
+#   # apply the labels
+#   labelled::var_label(df) <- var_labels
 
-  return(df)
-}
+#   return(df)
+# }
 
 get_df_correlated <- function(seed = 123, n = 1000) {
   set.seed(seed)
@@ -487,6 +487,78 @@ get_df_nhanes <- function() {
     NHANES::NHANES
 }
 
+get_df_ordered_factor <- function(seed = 123, rows = 1000) {
+  set.seed(seed)
+  # create a dataset with two predictors, one of which `pred1` is an ordered factor
+  df <- tibble::tibble(
+    outcome = sample(0:1, size = rows, replace = TRUE) |>
+      factor(levels = c(0, 1), labels = c("Alive", "Died")),
+    # ordered factor
+    pred1 = sample(0:5, size = rows, replace = TRUE) |>
+      factor(
+        levels = c(0, 1, 2, 3, 4, 5),
+        labels = c('zero', 'one', 'two', "three", "four", "five"),
+        ordered = TRUE
+      ),
+    # numeric
+    pred2 = rpois(n = rows, lambda = 5),
+    # factor
+    pred3 = sample(0:3, size = rows, replace = TRUE) |>
+      factor(levels = c(0, 1, 2, 3), labels = c("Zero", "One", "Two", "Three"))
+  )
+}
+
+get_df_large_synthetic <- function(seed = 123, rows = 1e6) {
+  set.seed(seed)
+  # create a dataset with ten predictors
+  df <-
+    tibble::tibble(
+      outcome = sample(0:1, size = rows, replace = TRUE) |>
+        factor(levels = 0:1, labels = c("Alive", "Died")),
+      # factor predictors
+      pred1 = sample(0:5, size = rows, replace = TRUE) |>
+        factor(
+          levels = 0:5,
+          labels = c("alpha", "beta", "gamma", "delta", "epsilon", "zeta")
+        ),
+      pred2 = sample(0:9, size = rows, replace = TRUE) |>
+        factor(
+          levels = 0:9,
+          labels = c("L0", "L1", "L2", "L3", "L4", "L5", "L6", "L7", "L8", "L9")
+        ),
+      pred3 = sample(0:3, size = rows, replace = TRUE) |>
+        factor(
+          levels = 0:3,
+          labels = c("Apple", "Banana", "Orange", "Grape")
+        ),
+
+      # numeric predictors
+      pred4 = rpois(n = rows, lambda = 10),
+      # pred4 = rnorm(n = rows, mean = 10, sd = 1),
+      pred5 = rnorm(n = rows, mean = 100, sd = 10),
+      pred6 = rnorm(n = rows, mean = 1, sd = 0.1)
+    )
+}
+
+get_df_influential <- function(seed = 123, rows = 1e3, influential = TRUE) {
+  set.seed(seed)
+
+  # create a dataset without influential observations
+  df <-
+    tibble::tibble(
+      outcome = rbinom(n = rows, size = 1, prob = 0.5),
+      pred1 = rnorm(n = rows, mean = 0, sd = 0.5),
+      pred2 = rnorm(n = rows, mean = 0, sd = 0.5)
+    )
+
+  if (influential) {
+    # modify it to become extreme
+    df[1, "pred1"] <- 10 # extreme value
+  }
+
+  return(df)
+}
+
 
 # Model functions --------------------------------------------------------------
 get_lr_titanic <- function() {
@@ -511,21 +583,21 @@ get_lr_infert <- function() {
   return(lr)
 }
 
-get_lr_diabetes <- function() {
-  df <- get_df_diabetes()
-  lr <- stats::glm(
-    data = df,
-    family = 'binomial',
-    formula = diabetes_5y ~
-      age +
-      bmi +
-      pregnancy_num +
-      glucose_mg_dl +
-      dbp_mm_hg +
-      triceps_mm +
-      insulin_microiu_ml
-  )
-}
+# get_lr_diabetes <- function() {
+#   df <- get_df_diabetes()
+#   lr <- stats::glm(
+#     data = df,
+#     family = 'binomial',
+#     formula = diabetes_5y ~
+#       age +
+#       bmi +
+#       pregnancy_num +
+#       glucose_mg_dl +
+#       dbp_mm_hg +
+#       triceps_mm +
+#       insulin_microiu_ml
+#   )
+# }
 
 get_lr_streptb <- function() {
   cli::cli_alert_warning("This dataset does not play well with CRAN")
@@ -659,4 +731,33 @@ get_lr_nhanes <- function() {
     family = binomial,
     formula = Diabetes ~ Gender + BPSys3 + Education
   )
+}
+
+get_lr_ordered_factor <- function(seed = 123, rows = 1e3) {
+  df <- get_df_ordered_factor(seed = seed, rows = rows)
+  lr <- stats::glm(
+    data = df,
+    family = "binomial",
+    formula = outcome ~ pred1 + pred2 + pred3,
+  )
+}
+
+get_lr_large_synthetic <- function(seed = 123, rows = 1e6) {
+  df <- get_df_large_synthetic(seed = seed, rows = rows)
+  lr <- stats::glm(
+    data = df,
+    family = "binomial",
+    formula = outcome ~ pred1 + pred2 + pred3 + pred4 + pred5 + pred6
+  )
+}
+
+get_lr_influential <- function(seed = 123, rows = 1e3, influential = TRUE) {
+  df <- get_df_influential(seed = seed, rows = rows, influential = influential)
+  lr <- stats::glm(
+    data = df,
+    family = "binomial",
+    formula = outcome ~ pred1 + pred2
+  )
+
+  return(lr)
 }
