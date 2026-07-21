@@ -1,7 +1,7 @@
 Package: plotor
 Type: Package
 Title: Odds Ratio Tools for Logistic Regression
-Version: 1.0.0
+Version: 1.1.0
 Authors@R: 
   person(
     'Craig', 'Parylo', 
@@ -23,18 +23,19 @@ Imports: broom, callr, car, cli, detectseparation, dplyr, forcats,
         prettyunits, purrr, rlang, scales, stats, stringr, tibble,
         tidyr, tidyselect
 RoxygenNote: 7.3.3
-Suggests: datasets, here, knitr, labelled, magrittr, MASS, medicaldata,
-        NHANES, R4HCR, rmarkdown, svglite, testthat (>= 3.0.0), vdiffr,
-        webshot2
-VignetteBuilder: knitr
+Suggests: datasets, here, Hmisc, knitr, labelled, magrittr, MASS,
+        medicaldata, NHANES, quarto, R4HCR, rmarkdown, svglite,
+        testthat (>= 3.0.0), vdiffr, webshot2
+VignetteBuilder: knitr, quarto
 URL: https://github.com/craig-parylo/plotor,
         https://craig-parylo.github.io/plotor/
 BugReports: https://github.com/craig-parylo/plotor/issues
 Config/testthat/edition: 3
 Depends: R (>= 4.1.0)
+Config/Needs/website: quarto
 NeedsCompilation: no
-Packaged: 2026-02-14 16:39:38 UTC; craigparylo
+Packaged: 2026-07-21 07:44:34 UTC; Craig.Parylo
 Author: Craig Parylo [aut, cre, cph] (ORCID:
     <https://orcid.org/0000-0003-4297-7808>)
 Repository: CRAN
-Date/Publication: 2026-02-14 17:00:02 UTC
+Date/Publication: 2026-07-21 08:30:08 UTC

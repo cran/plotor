@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.40">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>check_or - Quick diagnostics for logistic regression</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+width: 0.8em;
+margin: 0 0.8em 0.2em -1em;  vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+</style>
+</head>
+
+<body>
+
+
+<header id="title-block-header">
+<h1 class="title">check_or - Quick diagnostics for logistic regression</h1>
+
+</header>
+
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(plotor)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>) <span class="co"># reproducibility</span></span></code></pre></div>
+</div>
+<h2 id="overview">Overview</h2>
+<p><code>check_or()</code> runs a compact, reproducible set of diagnostic checks for binomial logistic regression models fitted with <code>stats::glm(family = &quot;binomial&quot;)</code>. It prints concise pass / fail messages and optional explanatory details to help you decide whether to investigate further.</p>
+<h2 id="when-to-use-this-function">When to use this function</h2>
+<p>Use <code>check_or()</code> when you need to:</p>
+<ul>
+<li><p><strong>Validate model assumptions</strong> before reporting results</p></li>
+<li><p><strong>Identify common logistic regression pitfalls</strong> (separation, multicollinearity, insufficient sample size)</p></li>
+<li><p><strong>Quickly diagnose problems</strong> without writing custom diagnostic code</p></li>
+<li><p><strong>Document model checking</strong> in a reproducible way</p></li>
+</ul>
+<p><strong>Note</strong>: <code>check_or()</code> works only with <code>glm(family = &quot;binomial&quot;)</code>. It does not support logistic regression via other packages (e.g., <code>glm2</code>, <code>logistf</code>) or ordinal / multinomial logistic regression.</p>
+<h2 id="inputs">Inputs</h2>
+<ul>
+<li><p><code>glm_model_results</code>: a fitted stats::glm object with family = “binomial”</p></li>
+<li><p><code>confint_fast_estimate</code>: logical (default = FALSE). If TRUE, uses faster approximate confidence interval checks</p></li>
+<li><p><code>details</code>: logical (default TRUE). If TRUE, prints brief explanations for each check.</p></li>
+</ul>
+<h2 id="minimal-example">Minimal example</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create a small example dataset</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>rows <span class="ot">&lt;-</span> <span class="dv">400</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">outcome =</span> <span class="fu">rbinom</span>(<span class="at">n =</span> rows, <span class="at">size =</span> <span class="dv">1</span>, <span class="at">prob =</span> <span class="fl">0.25</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">factor</span>(<span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;Healthy&quot;</span>, <span class="st">&quot;Disease&quot;</span>)),</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">age =</span> <span class="fu">rnorm</span>(<span class="at">n =</span> rows, <span class="at">mean =</span> <span class="dv">50</span>, <span class="at">sd =</span> <span class="dv">12</span>),</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">sex =</span> <span class="fu">sample</span>(<span class="at">x =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">1</span>, <span class="at">size =</span> rows, <span class="at">replace =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">factor</span>(<span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;Female&quot;</span>, <span class="st">&quot;Male&quot;</span>)),</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">smoke =</span> <span class="fu">sample</span>(<span class="at">x =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">2</span>, <span class="at">size =</span> rows, <span class="at">replace =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">factor</span>(<span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;Never&quot;</span>, <span class="st">&quot;Former&quot;</span>, <span class="st">&quot;Current&quot;</span>))</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co"># fit a logistic regression model</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>m <span class="ot">&lt;-</span> <span class="fu">glm</span>(</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">formula =</span> outcome <span class="sc">~</span> age <span class="sc">+</span> sex <span class="sc">+</span> smoke,</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="st">&quot;binomial&quot;</span>,</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> df</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co"># prints messages to console</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="fu">check_or</span>(m)</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ── Assumption checks ───────────────────────────────────────────────────────────</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ── Summary ──</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ✔ The outcome variable is binary</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ✔ Predictor variables are not highly correlated with each other</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ✔ The outcome is not separated by predictors</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ✔ The sample size is large enough</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ✔ Continuous variables either have a linear relationship with the log-odds of</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; the outcome or are absent</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ✔ No observations unduly influence model estimates</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Your model was checked for logistic regression assumptions in the following</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; areas:</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Binary outcome:</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; The outcome variable was checked for containing precisely two levels.</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Multicollinearity:</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; The `vif()` function from the car package was used to check for highly</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; correlated predictor variables.</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Separation:</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; The `detectseparation()` function from the detectseparation package was used to</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; check for complete or quasi-complete separation in the data.</span></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Sample size:</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; A rule of thumb was applied, requiring at least 10 events per predictor</span></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; variable and at least 10 events per level of categorical variables to ensure</span></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; sufficient data for reliable estimates.</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Linearity:</span></span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; A likelihood ratio test was conducted to assess improvements in model fit</span></span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; compared to a model using Box-Tidwell power transformations on continuous</span></span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; predictors. Any observed improvement likely indicates non-linear relationships</span></span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; between the continuous predictors and the log-odds of the outcome.</span></span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Influential observations:</span></span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; A test to identify observations that could disproportionately influence model</span></span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; statistics was applied. The test simultaneously examined three metrics: Cook&#39;s</span></span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; distance (measuring overall observation impact), leverage (quantifying an</span></span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; observation&#39;s distance from the data centre), and standardised residuals</span></span>
+<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (indicating how unusual an observation is relative to the model). To minimise</span></span>
+<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; false positive, an observation was flagged only if it met at least two of these</span></span>
+<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; diagnostic criteria.</span></span>
+<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ✔ These tests found no issues with your model.</span></span>
+<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span></code></pre></div>
+</div>
+<h2 id="diagnostic-checks-in-detail">Diagnostic checks in detail</h2>
+<p><code>check_or()</code> performs six key checks. Each check prints a short status message to the console with optional explanatory text.</p>
+<h3 id="binary-outcome">Binary outcome</h3>
+<p><strong>What it checks</strong>: confirms the response variable has exactly two distinct levels.</p>
+<p><strong>Why it matters</strong>: logistic regression requires a binary outcome. If your outcome has more than two levels, you need multinomial or ordinal logistic regression instead.</p>
+<p><strong>What to watch for</strong>: if this check fails, stop and reconsider your model specification.</p>
+<h3 id="multicollinearity">Multicollinearity</h3>
+<p><strong>What it checks</strong>: computer variance inflation factors (VIF) or generalised VIF (GVIF) depending on predictor types.</p>
+<p><strong>Why it matters</strong>: high multicollinearity destabilises coefficient estimates and inflates standard errors, making results unreliable.</p>
+<p><strong>Thresholds</strong>:</p>
+<ul>
+<li><p><strong>VIF ≥ 5</strong> (numeric predictors): indicates problematic collinearity</p></li>
+<li><p><strong>GVIF ≥ 2</strong> (factor predictors): indicates problematic collinearity</p></li>
+</ul>
+<p><strong>What to watch for</strong>: if flagged, inspect correlations between predictors. Consider removing redundant variables, combining categories or using regularisation.</p>
+<h3 id="separation-detection">Separation detection</h3>
+<p><strong>What it checks</strong>: tests for complete or quasi-complete separation in the data.</p>
+<p><strong>Why it matters</strong>: separation occurs when a predictor perfectly (or nearly perfectly) predicts the outcome. This causes infinite or unstable coefficient estimates and unreliable inference.</p>
+<p><strong>Two modes</strong>:</p>
+<ul>
+<li><p><strong><code>confint_fast_estimate = FALSE</code></strong> (default): uses <code>detectseparation::detectseparation()</code> for robust, thorough detection. Slower but catches subtle separation patterns.</p></li>
+<li><p><strong><code>confint_fast_estimate = TRUE</code></strong>: performs quicker checks (non-overlapping numeric ranges, zero-outcome levels for factors). Faster but may miss subtle separation.</p></li>
+</ul>
+<p><strong>What to watch for</strong>: if flagged, consider:</p>
+<ul>
+<li><p>removing the separating factor</p></li>
+<li><p>combining rare categories</p></li>
+<li><p>using Firth’s penalised likelihood (via <code>logistf</code> package)</p></li>
+</ul>
+<h3 id="sample-size-sufficiency">Sample size sufficiency</h3>
+<p><strong>What it checks</strong>: applies the rule of thumb: <strong>at least 10 outcome events per estimated parameter</strong> (including dummy variables for factor levels).</p>
+<p><strong>Why it matters</strong>: insufficient events per parameter leads to unstable estimates and overconfidence in results.</p>
+<p><strong>Calculation</strong>:</p>
+<ul>
+<li><p>Count the number of outcome events (n)</p></li>
+<li><p>Count the number of parameters estimated (including intercept and all dummy variables for factors)</p></li>
+<li><p>Flag if n / parameters &lt; 10</p></li>
+</ul>
+<p><strong>What to watch for</strong>: if flagged, consider:</p>
+<ul>
+<li><p>Simplifying your model (remove non-significant predictors)</p></li>
+<li><p>Combining factor categories</p></li>
+<li><p>Collecting more data</p></li>
+</ul>
+<h3 id="linearity-in-the-logit">Linearity in the logit</h3>
+<p><strong>What it checks</strong>: tests whether continuous predictors have a <strong>linear relationship with the log-odds</strong> of the outcome using a likelihood-ratio test.</p>
+<p><strong>Why it matters</strong>: logistic regression assumes a linear relationship on the log-odds scale. Non-linear relationships may require splines, polynomials or transformation.</p>
+<p><strong>Technical note</strong>: this check uses Box-Tidwell style tests, which transform continuous predictors to test for non-linearity. Factor predictors are not tested because they are already categorical.</p>
+<p><strong>What to watch for</strong>: if flagged, consider:</p>
+<ul>
+<li><p>Adding polynomial terms (e.g., <code>age + I(age^2)</code>)</p></li>
+<li><p>Using restricted cubic splines (e.g., <code>rms::rcs(age, 3)</code>)</p></li>
+<li><p>Log-transforming the predictor if appropriate</p></li>
+</ul>
+<h3 id="influential-observations">Influential observations</h3>
+<p><strong>What it checks</strong>: identifies observations with high influence using three criteria:</p>
+<ul>
+<li><p><strong>Cook’s distance</strong> (overall influence on model fit)</p></li>
+<li><p><strong>Leverage</strong> (unusual predictor values)</p></li>
+<li><p><strong>standardised residuals</strong> (unusual outcome given predictors)</p></li>
+</ul>
+<p>An observation is flagged if it meets <strong>at least two of these three criteria</strong>.</p>
+<p><strong>Why it matters</strong>: a small number of influential observations can disproportionately affect coefficient estimates and conclusions.</p>
+<p><strong>What to watch for</strong>: if flagged:</p>
+<ul>
+<li><p>Inspect the raw data for data entry errors</p></li>
+<li><p>Verify that observations are legitmate (not measurement errors)</p></li>
+<li><p>Consider robust fitting methods or justifying exclusion if appropriate</p></li>
+</ul>
+<h2 id="interpreting-results">Interpreting results</h2>
+<h3 id="pass">Pass (✔)</h3>
+<p><strong>Meaning</strong>: no immediate concern for that assumption</p>
+<p><strong>Action</strong>: you may proceed with confidence to report and interpret results. See <code>vignette(&quot;table_or&quot;)</code> for formatting results and <code>vignette(&quot;plot_or&quot;)</code> for visualisation.</p>
+<h3 id="issue">Issue (✖)</h3>
+<p><strong>Meaning</strong>: a potential problem detected. Further investigation recommended.</p>
+<p><strong>Action</strong>: use the guidance below and cross-reference the check descriptions above.</p>
+<h3 id="recommended-actions-by-issue">Recommended actions by issue</h3>
+<table class="caption-top">
+<caption>Recommended actions by issue</caption>
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Issue</th>
+<th>Recommended actions</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Binary outcome fails</td>
+<td>Stop. Reconsider your outcome variable. Use multinomial or ordinal logistic regression if needed.</td>
+</tr>
+<tr class="even">
+<td>Multicollinearity</td>
+<td>Inspect predictor correlations. Remove redundant variables, combine categories or use regularisation.</td>
+</tr>
+<tr class="odd">
+<td>Separaation detected</td>
+<td>Remove the separating predictor, combine rare categories or use Firth’s penalised likelihood (<code>logistf</code> package).</td>
+</tr>
+<tr class="even">
+<td>Low events-per-variable</td>
+<td>Simplify your model by removing non-significant predictors. Combine rare factor categories. Collect more data if possible.</td>
+</tr>
+<tr class="odd">
+<td>Non-linear logit</td>
+<td>Add polynomial terms (e.g., <code>age + I(age^2)</code>) or use splines (e.g., <code>rms::rcs(age, 3)</code>). Plot the relationship to guide decisions.</td>
+</tr>
+<tr class="even">
+<td>Influential observations</td>
+<td>Inspect raw data for errors. Verify legitimacy of observations. Consider robust fitting or document justification for exclusion.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example-model-with-separation">Example: model with separation</h3>
+<p>To illustrate what a failed check looks like, here’s a model that exhibits <strong>separation</strong>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create data with separation</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>rows <span class="ot">&lt;-</span> <span class="dv">100</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>df_sep <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">outcome =</span> <span class="fu">c</span>(<span class="fu">rep</span>(<span class="dv">0</span>, <span class="dv">50</span>), <span class="fu">rep</span>(<span class="dv">1</span>, <span class="dv">50</span>)) <span class="sc">|&gt;</span> <span class="fu">factor</span>(<span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;No&quot;</span>, <span class="st">&quot;Yes&quot;</span>)),</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">predictor1 =</span> <span class="fu">c</span>(<span class="fu">rep</span>(<span class="dv">0</span>, <span class="dv">50</span>), <span class="fu">rep</span>(<span class="dv">1</span>, <span class="dv">50</span>)), <span class="co"># perfect separator</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">predictor2 =</span> <span class="fu">rpois</span>(<span class="at">n =</span> rows, <span class="at">lambda =</span> <span class="dv">5</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co"># fit model</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>m_sep <span class="ot">&lt;-</span> <span class="fu">glm</span>(</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">formula =</span> outcome <span class="sc">~</span> predictor1 <span class="sc">+</span> predictor2,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="st">&quot;binomial&quot;</span>,</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> df_sep</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co"># run diagnostics</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="fu">check_or</span>(m_sep)</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ── Assumption checks ───────────────────────────────────────────────────────────</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ── Summary ──</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ✔ The outcome variable is binary</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ✔ Predictor variables are not highly correlated with each other</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ✖ The outcome is separated by at least one predictor</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ✔ The sample size is large enough</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ✔ Continuous variables either have a linear relationship with the log-odds of</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; the outcome or are absent</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ✖ Some observations significantly distort model estimates</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Your model was checked for logistic regression assumptions in the following</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; areas:</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Binary outcome:</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; The outcome variable was checked for containing precisely two levels.</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Multicollinearity:</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; The `vif()` function from the car package was used to check for highly</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; correlated predictor variables.</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Separation:</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; The `detectseparation()` function from the detectseparation package was used to</span></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; check for complete or quasi-complete separation in the data.</span></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Sample size:</span></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; A rule of thumb was applied, requiring at least 10 events per predictor</span></span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; variable and at least 10 events per level of categorical variables to ensure</span></span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; sufficient data for reliable estimates.</span></span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Linearity:</span></span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; A likelihood ratio test was conducted to assess improvements in model fit</span></span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; compared to a model using Box-Tidwell power transformations on continuous</span></span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; predictors. Any observed improvement likely indicates non-linear relationships</span></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; between the continuous predictors and the log-odds of the outcome.</span></span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Influential observations:</span></span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; A test to identify observations that could disproportionately influence model</span></span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; statistics was applied. The test simultaneously examined three metrics: Cook&#39;s</span></span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; distance (measuring overall observation impact), leverage (quantifying an</span></span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; observation&#39;s distance from the data centre), and standardised residuals</span></span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (indicating how unusual an observation is relative to the model). To minimise</span></span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; false positive, an observation was flagged only if it met at least two of these</span></span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; diagnostic criteria.</span></span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ! These tests indicate there are issues (reported above) that you may wish to</span></span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; explore further before reporting your findings.</span></span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span></code></pre></div>
+</div>
+<p>In this case, the separation check fails because <code>predictor1</code> perfectly predicts <code>outcome</code>. The output flags this issue so you can take remedial action.</p>
+<h2 id="performance-considerations">Performance considerations</h2>
+<h3 id="speed-vs.-robustness">Speed vs. Robustness</h3>
+<p>The <code>confint_fast_estimate</code> parameter controls the trade-off:</p>
+<ul>
+<li><p><strong><code>confint_fast_estimate = FALSE</code></strong> (default): thorough separation detection using <code>detectseparation::detectseparation()</code>. Recommended for most users. May take longer with larger models.</p></li>
+<li><p><strong><code>confint_fast_estimate = TRUE</code></strong>: faster checks using range overlap and zero-cell detection. Use only if model is large and speed is critical, accepting that subtle separation may be missed.</p></li>
+</ul>
+<h2 id="notes-and-limitations">Notes and limitations</h2>
+<ul>
+<li><p><strong>Diagnostic aid, not definitive test</strong>: <code>check_or()</code> is a screening tool. Use its output together with domain knowledge, data visualisation and thorough model checking (plots, alternative estimators).</p></li>
+<li><p><strong>Rule-of-thumb thresholds</strong>: the checks use conservative, widely-accepted thresholds (e.g., 10 events per paramter, VIF ≥ 5). Your specific context may warrant different thresholds; adjust your interpretation accordingly.</p></li>
+<li><p><strong>Complementary tools</strong>: <code>check_or()</code> works best alongside visual diagnostics.</p></li>
+<li><p><strong>Model-specific</strong>: assumes a standard binomial logistic regression. Does not apply to conditional logistic regression, survey-weighted logistic regression or mixed-effects logistic regression.</p></li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<p><code>check_or()</code> offers a systematic, reproducible approach to validating logistic regression model assumptions before reporting results. By catching common pitfalls early - separation, multicollinearity, insufficient sample size and non-linearity - it promotes more reliable and robust statistical inference.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><p><code>vignette(&quot;plot_or&quot;)</code> - detailed plotting options and themes</p></li>
+<li><p><code>vignette(&quot;table_or&quot;)</code> - formatting, gt integration and export</p></li>
+<li><p><code>detectseparation::detect_separation()</code> - separation diagnostics</p></li>
+<li><p><code>car::vif()</code> - multicollinearity diagnostics</p></li>
+<li><p><code>rms::rcs()</code> - restricted cubic splines for non-linear relationships</p></li>
+</ul>
+
+
+
+
+
+</body></html>
